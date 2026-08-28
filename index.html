@@ -81,6 +81,21 @@
   .acct-box .subrow { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-dim); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hairline); }
   .acct-box .subrow span:last-child { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
   .acct-stale { color: var(--pending) !important; }
+
+  .risk-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .risk-box { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 18px; }
+  .risk-box .risk-title { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+  .risk-box .risk-sub { font-size: 10.5px; color: var(--ink-faint); margin-bottom: 12px; }
+  .gauge-track { height: 8px; background: #1e2126; border-radius: 4px; overflow: hidden; position: relative; }
+  .gauge-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .gauge-fill.ok { background: var(--win); }
+  .gauge-fill.warn { background: #f5b942; }
+  .gauge-fill.danger { background: var(--loss); }
+  .risk-value { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 600; margin-top: 10px; color: #fff; }
+  .risk-limit { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+  .payout-days { display: flex; gap: 4px; margin-top: 10px; flex-wrap: wrap; }
+  .payout-dot { width: 16px; height: 16px; border-radius: 4px; background: #1e2126; border: 1px solid var(--hairline); }
+  .payout-dot.filled { background: var(--win); border-color: var(--win); }
   .card {
     background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
     padding: 16px 18px;
@@ -168,6 +183,10 @@
 
 <main>
   <div class="acct-panel" id="acctPanel"></div>
+
+  <h2 class="section">FundingPips Zero — status</h2>
+  <div class="risk-panel" id="riskPanel"></div>
+
   <div class="cards" id="cards"></div>
 
   <h2 class="section">Trades</h2>
@@ -212,9 +231,9 @@
 <script>
 const trades = [] || [];
 const summary = {};
-const activity = [{"logged_at":"2026-08-28T15:10:50.499Z","note":"Scheduled scan 2026-08-28: XAUUSD + XAGUSD scannet, 0 nye signaler. Ordre-eksekvering sprunget over -- MT5-konto identificeret som REAL, ikke DEMO (get_account_info returnerede account_type=real).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0}] || [];
+const activity = [{"logged_at":"2026-08-28T17:32:29.646Z","note":"Scan XAUUSD+XAGUSD M15: ingen nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-28T15:10:50.499Z","note":"Scheduled scan 2026-08-28: XAUUSD + XAGUSD scannet, 0 nye signaler. Ordre-eksekvering sprunget over -- MT5-konto identificeret som REAL, ikke DEMO (get_account_info returnerede account_type=real).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0}] || [];
 const accountStatus = {};
-const generatedAt = "2026-08-28T15:18:15.207179+00:00";
+const generatedAt = "2026-08-28T17:32:40.004935+00:00";
 
 function renderAccountPanel() {
   const container = document.getElementById('acctPanel');
@@ -243,6 +262,100 @@ function renderAccountPanel() {
       <div class="subrow ${staleCls}"><span>Sidst opdateret</span><span>${ageMin < 1 ? 'lige nu' : ageMin + ' min. siden'}</span></div>
     </div>`;
   }).join('');
+}
+
+// FundingPips Zero thresholds -- adjust here if you switch products
+const ZERO_MAX_TRAILING_LOSS_PCT = 5.0;
+const ZERO_DAILY_LOSS_LIMIT_PCT = 3.0;
+const ZERO_PAYOUT_QUALIFYING_DAY_PCT = 0.25;
+const ZERO_PAYOUT_DAYS_NEEDED = 7;
+const ZERO_ROLLING_WINDOW_DAYS = 30;
+
+function gaugeClass(pctOfLimit) {
+  if (pctOfLimit >= 80) return 'danger';
+  if (pctOfLimit >= 50) return 'warn';
+  return 'ok';
+}
+
+function renderRiskPanel() {
+  const container = document.getElementById('riskPanel');
+  const closed = trades.filter(t => t.outcome && t.pnl_usd != null && t.entry_time);
+  if (!closed.length) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      Ingen lukkede trades endnu -- drawdown- og udbetalingsstatus vises her,
+      så snart der er data at regne på.
+    </div>`;
+    return;
+  }
+
+  // account balance: prefer live account_status, else assume $25,000 starting balance
+  const acctEntry = Object.values(accountStatus)[0];
+  const startBalance = acctEntry ? Number(acctEntry.balance) - closed.reduce((s,t)=>s+Number(t.pnl_usd||0),0) : 25000;
+
+  // build daily PnL series
+  const byDay = {};
+  closed.forEach(t => {
+    const day = t.entry_time.substring(0, 10);
+    byDay[day] = (byDay[day] || 0) + Number(t.pnl_usd || 0);
+  });
+  const days = Object.keys(byDay).sort();
+
+  // equity curve + running peak -> current drawdown
+  let equity = startBalance;
+  let peak = startBalance;
+  days.forEach(d => { equity += byDay[d]; peak = Math.max(peak, equity); });
+  const currentEquity = acctEntry ? Number(acctEntry.equity) : equity;
+  peak = Math.max(peak, currentEquity);
+  const drawdownPct = peak > 0 ? Math.max(0, (peak - currentEquity) / peak * 100) : 0;
+  const ddPctOfLimit = Math.min(100, drawdownPct / ZERO_MAX_TRAILING_LOSS_PCT * 100);
+
+  // today's PnL vs daily loss limit
+  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayPnl = byDay[todayStr] || 0;
+  const todayPnlPct = startBalance > 0 ? (todayPnl / startBalance * 100) : 0;
+  const dailyPctOfLimit = Math.min(100, Math.max(0, -todayPnlPct) / ZERO_DAILY_LOSS_LIMIT_PCT * 100);
+
+  // rolling 30-day qualifying days count
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ZERO_ROLLING_WINDOW_DAYS);
+  let qualifyingDays = 0;
+  days.forEach(d => {
+    if (new Date(d) >= cutoff) {
+      const dayPct = startBalance > 0 ? (byDay[d] / startBalance * 100) : 0;
+      if (dayPct >= ZERO_PAYOUT_QUALIFYING_DAY_PCT) qualifyingDays++;
+    }
+  });
+  const payoutProgress = Math.min(100, qualifyingDays / ZERO_PAYOUT_DAYS_NEEDED * 100);
+
+  const ddCls = gaugeClass(ddPctOfLimit);
+  const dailyCls = gaugeClass(dailyPctOfLimit);
+
+  const dayDots = Array.from({length: ZERO_PAYOUT_DAYS_NEEDED}, (_, i) =>
+    `<div class="payout-dot ${i < qualifyingDays ? 'filled' : ''}"></div>`).join('');
+
+  container.innerHTML = `
+    <div class="risk-box">
+      <div class="risk-title">Drawdown fra peak</div>
+      <div class="risk-sub">Zero's grænse: ${ZERO_MAX_TRAILING_LOSS_PCT}% trailing loss</div>
+      <div class="gauge-track"><div class="gauge-fill ${ddCls}" style="width:${ddPctOfLimit}%"></div></div>
+      <div class="risk-value">${drawdownPct.toFixed(2)}%</div>
+      <div class="risk-limit">af ${ZERO_MAX_TRAILING_LOSS_PCT}% max — ${(ZERO_MAX_TRAILING_LOSS_PCT - drawdownPct).toFixed(2)}% margin tilbage</div>
+    </div>
+    <div class="risk-box">
+      <div class="risk-title">Dagens tab</div>
+      <div class="risk-sub">Zero's grænse: ${ZERO_DAILY_LOSS_LIMIT_PCT}% pr. dag</div>
+      <div class="gauge-track"><div class="gauge-fill ${dailyCls}" style="width:${dailyPctOfLimit}%"></div></div>
+      <div class="risk-value ${todayPnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${todayPnl >= 0 ? '+' : ''}$${todayPnl.toFixed(2)}</div>
+      <div class="risk-limit">${todayPnlPct.toFixed(2)}% i dag, af -${ZERO_DAILY_LOSS_LIMIT_PCT}% max</div>
+    </div>
+    <div class="risk-box">
+      <div class="risk-title">Udbetalings-fremdrift</div>
+      <div class="risk-sub">${ZERO_PAYOUT_DAYS_NEEDED} profitable dage (≥${ZERO_PAYOUT_QUALIFYING_DAY_PCT}%) i seneste ${ZERO_ROLLING_WINDOW_DAYS} dage</div>
+      <div class="gauge-track"><div class="gauge-fill ok" style="width:${payoutProgress}%"></div></div>
+      <div class="risk-value">${qualifyingDays} / ${ZERO_PAYOUT_DAYS_NEEDED}</div>
+      <div class="payout-days">${dayDots}</div>
+    </div>
+  `;
 }
 
 function metalSpan(symbol) {
@@ -413,6 +526,7 @@ document.getElementById('outcomeFilter').addEventListener('change', renderTable)
 
 renderStatus();
 renderAccountPanel();
+renderRiskPanel();
 renderCards();
 populateFilters();
 renderTable();
