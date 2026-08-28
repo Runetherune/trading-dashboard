@@ -2,76 +2,259 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<title>Trading Agent Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading Agent — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  body { font-family: -apple-system, Segoe UI, sans-serif; background: #0f1115; color: #e6e6e6; margin: 0; padding: 24px; }
-  h1 { font-size: 20px; color: #fff; margin-bottom: 4px; }
-  .meta { color: #888; font-size: 13px; margin-bottom: 24px; }
-  .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
-  .card { background: #1a1d24; border: 1px solid #2a2e38; border-radius: 10px; padding: 16px 20px; min-width: 220px; }
-  .card h2 { font-size: 14px; color: #aaa; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; }
-  .card .role { font-size: 11px; color: #666; margin-bottom: 8px; }
-  .stat-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
-  .stat-row .label { color: #999; }
-  .pnl-pos { color: #4ade80; font-weight: 600; }
-  .pnl-neg { color: #f87171; font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: #888; font-weight: 500; padding: 8px 10px; border-bottom: 1px solid #2a2e38; position: sticky; top: 0; background: #0f1115; }
-  td { padding: 8px 10px; border-bottom: 1px solid #1a1d24; }
-  .badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-  .badge-win { background: #14532d; color: #4ade80; }
-  .badge-loss { background: #450a0a; color: #f87171; }
-  .badge-pending { background: #292524; color: #a8a29e; }
-  .dir-long { color: #4ade80; }
-  .dir-short { color: #f87171; }
-  .filters { margin-bottom: 12px; display: flex; gap: 8px; }
-  select { background: #1a1d24; color: #e6e6e6; border: 1px solid #2a2e38; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  :root {
+    --bg: #0b0d10;
+    --surface: #14171c;
+    --surface-raised: #1b1f25;
+    --hairline: #23282f;
+    --gold-a: #a9822f;
+    --gold-b: #f0d488;
+    --silver-a: #5b6b7d;
+    --silver-b: #c3d3e0;
+    --ink: #ecebe6;
+    --ink-dim: #8b9096;
+    --ink-faint: #565c63;
+    --win: #4ade80;
+    --loss: #f2685c;
+    --pending: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Manrope', -apple-system, Segoe UI, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding: 20px 20px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .metal-xau {
+    background: linear-gradient(100deg, var(--gold-a), var(--gold-b) 60%, var(--gold-a));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 700;
+  }
+  .metal-xag {
+    background: linear-gradient(100deg, var(--silver-a), var(--silver-b) 60%, var(--silver-a));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 700;
+  }
+  header { max-width: 1180px; margin: 0 auto 24px; }
+  h1 {
+    font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 10px 0;
+    letter-spacing: -0.01em;
+  }
+  .statusbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 13px; color: var(--ink-dim);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--win);
+    box-shadow: 0 0 0 0 rgba(74,222,128,0.6);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+    100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+  }
+  .statusbar .sep { color: var(--ink-faint); }
+  main { max-width: 1180px; margin: 0 auto; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card h2 { font-size: 13px; color: var(--ink); margin: 0 0 2px 0; font-weight: 700; }
+  .card .role { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .stat-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 3px 0; }
+  .stat-row .label { color: var(--ink-dim); }
+  .stat-row .val { font-family: 'IBM Plex Mono', monospace; }
+  .pnl-pos { color: var(--win); font-weight: 600; }
+  .pnl-neg { color: var(--loss); font-weight: 600; }
+  .sparkline { margin-top: 10px; height: 32px; }
+  .sparkline svg { width: 100%; height: 100%; display: block; }
+
+  h2.section { font-size: 14px; color: var(--ink); margin: 32px 0 12px; font-weight: 700; }
+
+  .filters { margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  select {
+    background: var(--surface); color: var(--ink); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 7px 10px; font-size: 12.5px; font-family: inherit;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--hairline); border-radius: 12px; padding: 28px 20px;
+    text-align: center; color: var(--ink-dim); font-size: 13px; line-height: 1.6;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    text-align: left; color: var(--ink-faint); font-weight: 600; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 9px 10px; border-bottom: 1px solid var(--hairline);
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid #191d22; font-family: 'IBM Plex Mono', monospace; }
+  tr:hover td { background: var(--surface-raised); }
+  .badge { padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 600; }
+  .badge-win { background: #123420; color: var(--win); }
+  .badge-loss { background: #3a1613; color: var(--loss); }
+  .badge-pending { background: #1e2126; color: var(--pending); }
+  .dir-long { color: var(--win); }
+  .dir-short { color: var(--loss); }
+
+  .desktop-table { display: block; }
+  .mobile-cards { display: none; }
+
+  .trade-card {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 8px; font-size: 12.5px;
+  }
+  .trade-card .row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .trade-card .symbol { font-weight: 700; font-size: 14px; font-family: 'Manrope', sans-serif; }
+  .trade-card .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-family: 'IBM Plex Mono', monospace; color: var(--ink-dim); font-size: 11.5px; }
+  .trade-card .grid div span { color: var(--ink); display: block; }
+  .trade-card .meta { margin-top: 6px; font-size: 11px; color: var(--ink-faint); }
+
+  @media (max-width: 720px) {
+    .desktop-table { display: none; }
+    .mobile-cards { display: block; }
+    body { padding: 14px 14px 50px; }
+  }
+
+  .activity-log { max-height: 420px; overflow-y: auto; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface); }
+  .activity-item { padding: 11px 14px; border-bottom: 1px solid #191d22; }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-time { font-size: 10.5px; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
+  .activity-note { font-size: 12.5px; margin-top: 3px; color: var(--ink); }
+  .activity-meta { font-size: 11px; color: var(--ink-dim); margin-top: 3px; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 4px; }
 </style>
 </head>
 <body>
-<h1>Trading Agent Dashboard</h1>
-<div class="meta">Genereret: 2026-08-28 15:01 UTC &middot; 0 signaler i alt paa tvaers af 0 konto(er)</div>
+<header>
+  <h1>Trading Agent — Dashboard</h1>
+  <div class="statusbar">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Genereret for et øjeblik siden</span>
+    <span class="sep">·</span>
+    <span id="totalSignals">0 signaler</span>
+    <span class="sep">·</span>
+    <span id="totalAccounts">0 konti</span>
+  </div>
+</header>
 
-<div class="cards" id="cards"></div>
+<main>
+  <div class="cards" id="cards"></div>
 
-<div class="filters">
-  <select id="acctFilter"><option value="">Alle konti</option></select>
-  <select id="stratFilter"><option value="">Alle strategier</option></select>
-  <select id="outcomeFilter">
-    <option value="">Alle udfald</option>
-    <option value="win">Kun vindere</option>
-    <option value="loss">Kun tabere</option>
-    <option value="pending">Kun aabne/ikke-graderede</option>
-  </select>
-</div>
+  <h2 class="section">Trades</h2>
+  <div class="filters">
+    <select id="acctFilter"><option value="">Alle konti</option></select>
+    <select id="stratFilter"><option value="">Alle strategier</option></select>
+    <select id="outcomeFilter">
+      <option value="">Alle udfald</option>
+      <option value="win">Kun vindere</option>
+      <option value="loss">Kun tabere</option>
+      <option value="pending">Kun åbne/ikke-graderede</option>
+    </select>
+  </div>
 
-<table id="tradesTable">
-  <thead>
-    <tr>
-      <th>Tidspunkt</th><th>Konto</th><th>Symbol</th><th>Strategi</th><th>Retning</th>
-      <th>Entry</th><th>SL</th><th>TP</th><th>Lot</th><th>Risk%</th><th>Udfald</th><th>PnL ($)</th><th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="tradesBody"></tbody>
-</table>
+  <div id="tradesEmpty" class="empty-state" style="display:none;">
+    Ingen trades endnu. Systemet scanner hvert 15. minut og venter på et signal
+    der matcher en af de fire strategiers regler — det kan tage fra timer til
+    et par dage, afhængig af markedet.
+  </div>
 
-<h2 style="font-size:16px;color:#fff;margin-top:32px;">Aktivitetslog (hvad scanneren tjekkede/fandt)</h2>
-<div id="activityLog" style="max-height:400px;overflow-y:auto;border:1px solid #2a2e38;border-radius:8px;"></div>
+  <div class="desktop-table">
+    <table id="tradesTable">
+      <thead>
+        <tr>
+          <th>Tidspunkt</th><th>Konto</th><th>Symbol</th><th>Strategi</th><th>Retning</th>
+          <th>Entry</th><th>SL</th><th>TP</th><th>Lot</th><th>Risk%</th><th>Udfald</th><th>PnL</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tradesBody"></tbody>
+    </table>
+  </div>
+  <div class="mobile-cards" id="tradesCards"></div>
+
+  <h2 class="section">Aktivitetslog</h2>
+  <div id="activityEmpty" class="empty-state" style="display:none;">
+    Ingen aktivitet logget endnu. Ved næste scan noterer Claude her hvad der
+    blev tjekket og fundet.
+  </div>
+  <div class="activity-log" id="activityLog"></div>
+</main>
 
 <script>
-const trades = [];
+const trades = [] || [];
 const summary = {};
-const activity = [];
+const activity = [] || [];
+const generatedAt = "2026-08-28T15:09:51.538558+00:00";
+
+function metalSpan(symbol) {
+  if (!symbol) return '-';
+  const cls = symbol.toUpperCase().includes('XAU') ? 'metal-xau' : symbol.toUpperCase().includes('XAG') ? 'metal-xag' : '';
+  return cls ? `<span class="${cls}">${symbol}</span>` : symbol;
+}
 
 function fmtPnl(v) {
-  if (v === null || v === undefined || isNaN(v)) return '-';
+  if (v === null || v === undefined || isNaN(v)) return '<span style="color:var(--ink-faint)">-</span>';
   const cls = v >= 0 ? 'pnl-pos' : 'pnl-neg';
   const sign = v >= 0 ? '+' : '';
   return `<span class="${cls}">${sign}$${v.toFixed(2)}</span>`;
 }
 
+function sparklineSvg(points) {
+  if (!points || points.length < 2) return '';
+  const w = 200, h = 32, pad = 2;
+  const min = Math.min(...points, 0), max = Math.max(...points, 0);
+  const range = (max - min) || 1;
+  const stepX = (w - pad * 2) / (points.length - 1);
+  const coords = points.map((p, i) => {
+    const x = pad + i * stepX;
+    const y = h - pad - ((p - min) / range) * (h - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const last = points[points.length - 1];
+  const color = last >= 0 ? 'var(--win)' : 'var(--loss)';
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderStatus() {
+  const el = document.getElementById('statusText');
+  const gen = new Date(generatedAt);
+  const now = new Date();
+  const diffMin = Math.max(0, Math.round((now - gen) / 60000));
+  let text;
+  if (diffMin < 2) text = 'Opdateret for få øjeblikke siden';
+  else if (diffMin < 60) text = `Opdateret for ${diffMin} min. siden`;
+  else text = `Opdateret ${gen.toISOString().substring(0,16).replace('T',' ')} UTC`;
+  el.textContent = text;
+
+  const dot = document.getElementById('statusDot');
+  if (diffMin > 45) { dot.style.background = 'var(--pending)'; dot.style.animation = 'none'; }
+
+  document.getElementById('totalSignals').textContent = `${trades.length} signal(er) i alt`;
+  document.getElementById('totalAccounts').textContent = `${Object.keys(summary).length} konto(er)`;
+}
+
 function renderCards() {
   const container = document.getElementById('cards');
+  if (!Object.keys(summary).length) {
+    container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Ingen konti aktive endnu.</div>';
+    return;
+  }
   container.innerHTML = '';
   for (const [acct, s] of Object.entries(summary)) {
     const pnlClass = s.total_pnl_usd >= 0 ? 'pnl-pos' : 'pnl-neg';
@@ -79,13 +262,13 @@ function renderCards() {
       <div class="card">
         <h2>${acct}</h2>
         <div class="role">${s.role}</div>
-        <div class="stat-row"><span class="label">Signaler</span><span>${s.total_signals}</span></div>
-        <div class="stat-row"><span class="label">Lukkede trades</span><span>${s.closed_trades}</span></div>
-        <div class="stat-row"><span class="label">Aabne/afventer</span><span>${s.open_or_pending}</span></div>
-        <div class="stat-row"><span class="label">Vindere</span><span>${s.wins}</span></div>
-        <div class="stat-row"><span class="label">Tabere</span><span>${s.losses}</span></div>
-        <div class="stat-row"><span class="label">Winrate</span><span>${s.winrate !== null ? s.winrate + '%' : '-'}</span></div>
-        <div class="stat-row"><span class="label">Total PnL</span><span class="${pnlClass}">$${s.total_pnl_usd.toFixed(2)}</span></div>
+        <div class="stat-row"><span class="label">Signaler</span><span class="val">${s.total_signals}</span></div>
+        <div class="stat-row"><span class="label">Lukkede trades</span><span class="val">${s.closed_trades}</span></div>
+        <div class="stat-row"><span class="label">Åbne/afventer</span><span class="val">${s.open_or_pending}</span></div>
+        <div class="stat-row"><span class="label">Vindere / tabere</span><span class="val">${s.wins} / ${s.losses}</span></div>
+        <div class="stat-row"><span class="label">Winrate</span><span class="val">${s.winrate !== null ? s.winrate + '%' : '-'}</span></div>
+        <div class="stat-row"><span class="label">Total PnL</span><span class="val ${pnlClass}">$${s.total_pnl_usd.toFixed(2)}</span></div>
+        <div class="sparkline">${sparklineSvg(s.equity_curve)}</div>
       </div>`;
   }
 }
@@ -99,64 +282,94 @@ function populateFilters() {
   strats.forEach(s => stratSel.innerHTML += `<option value="${s}">${s}</option>`);
 }
 
-function renderTable() {
+function filteredTrades() {
   const acctF = document.getElementById('acctFilter').value;
   const stratF = document.getElementById('stratFilter').value;
   const outF = document.getElementById('outcomeFilter').value;
-  const body = document.getElementById('tradesBody');
-  body.innerHTML = '';
-
-  trades.filter(t => {
+  return trades.filter(t => {
     if (acctF && t.account !== acctF) return false;
     if (stratF && t.strategy !== stratF) return false;
     if (outF === 'win' && t.outcome !== 'win') return false;
     if (outF === 'loss' && t.outcome !== 'loss') return false;
     if (outF === 'pending' && t.outcome) return false;
     return true;
-  }).forEach(t => {
-    const outcomeBadge = t.outcome === 'win' ? '<span class="badge badge-win">WIN</span>'
-      : t.outcome === 'loss' ? '<span class="badge badge-loss">LOSS</span>'
-      : '<span class="badge badge-pending">-</span>';
+  });
+}
+
+function outcomeBadge(o) {
+  return o === 'win' ? '<span class="badge badge-win">WIN</span>'
+    : o === 'loss' ? '<span class="badge badge-loss">LOSS</span>'
+    : '<span class="badge badge-pending">-</span>';
+}
+
+function renderTable() {
+  const list = filteredTrades();
+  const hasTrades = trades.length > 0;
+  document.getElementById('tradesEmpty').style.display = hasTrades ? 'none' : 'block';
+  document.querySelector('.desktop-table').style.display = hasTrades ? 'block' : 'none';
+  document.getElementById('tradesCards').style.display = hasTrades ? '' : 'none';
+
+  const body = document.getElementById('tradesBody');
+  body.innerHTML = list.map(t => {
     const dirClass = t.direction === 'long' ? 'dir-long' : 'dir-short';
-    body.innerHTML += `<tr>
+    return `<tr>
       <td>${(t.entry_time || '').substring(0,16).replace('T',' ')}</td>
       <td>${t.account}</td>
-      <td>${t.symbol}</td>
+      <td>${metalSpan(t.symbol)}</td>
       <td>${t.strategy}</td>
       <td class="${dirClass}">${t.direction}</td>
-      <td>${t.entry_price ? t.entry_price.toFixed(2) : '-'}</td>
-      <td>${t.sl ? t.sl.toFixed(2) : '-'}</td>
-      <td>${t.tp ? t.tp.toFixed(2) : '-'}</td>
+      <td>${t.entry_price != null ? t.entry_price.toFixed(2) : '-'}</td>
+      <td>${t.sl != null ? t.sl.toFixed(2) : '-'}</td>
+      <td>${t.tp != null ? t.tp.toFixed(2) : '-'}</td>
       <td>${t.lot_size ?? '-'}</td>
       <td>${t.risk_pct_used ?? '-'}%</td>
-      <td>${outcomeBadge}</td>
+      <td>${outcomeBadge(t.outcome)}</td>
       <td>${fmtPnl(t.pnl_usd)}</td>
-      <td>${t.status || '-'}</td>
+      <td style="color:var(--ink-dim);">${t.status || '-'}</td>
     </tr>`;
-  });
+  }).join('');
+
+  const cards = document.getElementById('tradesCards');
+  cards.innerHTML = list.map(t => {
+    const dirClass = t.direction === 'long' ? 'dir-long' : 'dir-short';
+    return `<div class="trade-card">
+      <div class="row1">
+        <span class="symbol">${metalSpan(t.symbol)}</span>
+        ${outcomeBadge(t.outcome)}
+      </div>
+      <div class="grid">
+        <div>Retning<span class="${dirClass}">${t.direction}</span></div>
+        <div>Entry<span>${t.entry_price != null ? t.entry_price.toFixed(2) : '-'}</span></div>
+        <div>PnL<span>${fmtPnl(t.pnl_usd)}</span></div>
+        <div>SL<span>${t.sl != null ? t.sl.toFixed(2) : '-'}</span></div>
+        <div>TP<span>${t.tp != null ? t.tp.toFixed(2) : '-'}</span></div>
+        <div>Lot<span>${t.lot_size ?? '-'}</span></div>
+      </div>
+      <div class="meta">${t.strategy} · ${t.account} · ${(t.entry_time || '').substring(0,16).replace('T',' ')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderActivity() {
+  const container = document.getElementById('activityLog');
+  document.getElementById('activityEmpty').style.display = activity.length ? 'none' : 'block';
+  if (!activity.length) { container.innerHTML = ''; return; }
+  container.innerHTML = activity.map(a => `
+    <div class="activity-item">
+      <div class="activity-time">${(a.logged_at || '').substring(0,16).replace('T',' ')} UTC</div>
+      <div class="activity-note">${a.note || ''}</div>
+      <div class="activity-meta">${a.symbols_checked || ''}${a.signals_found ? ' · ' + a.signals_found + ' signal(er) fundet' : ''}</div>
+    </div>`).join('');
 }
 
 document.getElementById('acctFilter').addEventListener('change', renderTable);
 document.getElementById('stratFilter').addEventListener('change', renderTable);
 document.getElementById('outcomeFilter').addEventListener('change', renderTable);
 
+renderStatus();
 renderCards();
 populateFilters();
 renderTable();
-
-function renderActivity() {
-  const container = document.getElementById('activityLog');
-  if (!activity.length) {
-    container.innerHTML = '<div style="padding:16px;color:#666;">Ingen aktivitet logget endnu.</div>';
-    return;
-  }
-  container.innerHTML = activity.map(a => `
-    <div style="padding:10px 14px;border-bottom:1px solid #1a1d24;">
-      <div style="font-size:11px;color:#666;">${(a.logged_at || '').substring(0,16).replace('T',' ')} UTC</div>
-      <div style="font-size:13px;margin-top:2px;">${a.note || ''}</div>
-      <div style="font-size:11px;color:#888;margin-top:2px;">${a.symbols_checked || ''} ${a.signals_found ? '&middot; ' + a.signals_found + ' signal(er) fundet' : ''}</div>
-    </div>`).join('');
-}
 renderActivity();
 </script>
 </body>
