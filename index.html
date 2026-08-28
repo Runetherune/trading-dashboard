@@ -67,6 +67,20 @@
   .statusbar .sep { color: var(--ink-faint); }
   main { max-width: 1180px; margin: 0 auto; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .acct-panel {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;
+    margin-bottom: 22px;
+  }
+  .acct-box {
+    background: linear-gradient(150deg, var(--surface), var(--surface-raised));
+    border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 18px;
+  }
+  .acct-box .acct-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+  .acct-box .big-num { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; color: #fff; }
+  .acct-box .big-label { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .acct-box .subrow { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-dim); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hairline); }
+  .acct-box .subrow span:last-child { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
+  .acct-stale { color: var(--pending) !important; }
   .card {
     background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
     padding: 16px 18px;
@@ -153,6 +167,7 @@
 </header>
 
 <main>
+  <div class="acct-panel" id="acctPanel"></div>
   <div class="cards" id="cards"></div>
 
   <h2 class="section">Trades</h2>
@@ -198,7 +213,37 @@
 const trades = [] || [];
 const summary = {};
 const activity = [{"logged_at":"2026-08-28T15:10:50.499Z","note":"Scheduled scan 2026-08-28: XAUUSD + XAGUSD scannet, 0 nye signaler. Ordre-eksekvering sprunget over -- MT5-konto identificeret som REAL, ikke DEMO (get_account_info returnerede account_type=real).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0}] || [];
-const generatedAt = "2026-08-28T15:10:50.550441+00:00";
+const accountStatus = {};
+const generatedAt = "2026-08-28T15:18:15.207179+00:00";
+
+function renderAccountPanel() {
+  const container = document.getElementById('acctPanel');
+  const accounts = Object.entries(accountStatus);
+  if (!accounts.length) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      Ingen live konto-data endnu. Tilføjes automatisk næste gang scanneren
+      kalder get_account_info() og logger den via account_status.py.
+    </div>`;
+    return;
+  }
+  const now = new Date();
+  container.innerHTML = accounts.map(([acct, s]) => {
+    const logTime = new Date(s.logged_at);
+    const ageMin = Math.round((now - logTime) / 60000);
+    const staleCls = ageMin > 45 ? 'acct-stale' : '';
+    const pnlSinceStart = (s.equity - s.balance);
+    const pnlCls = pnlSinceStart >= 0 ? 'pnl-pos' : 'pnl-neg';
+    return `<div class="acct-box">
+      <div class="acct-name">${acct}</div>
+      <div class="big-label">Egenkapital (equity)</div>
+      <div class="big-num">$${Number(s.equity).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div class="subrow"><span>Balance</span><span>$${Number(s.balance).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>
+      <div class="subrow"><span>Åbne positioner</span><span>${s.open_positions_count}</span></div>
+      <div class="subrow"><span>Fri margin</span><span>$${Number(s.free_margin).toLocaleString(undefined,{minimumFractionDigits:0})}</span></div>
+      <div class="subrow ${staleCls}"><span>Sidst opdateret</span><span>${ageMin < 1 ? 'lige nu' : ageMin + ' min. siden'}</span></div>
+    </div>`;
+  }).join('');
+}
 
 function metalSpan(symbol) {
   if (!symbol) return '-';
@@ -367,6 +412,7 @@ document.getElementById('stratFilter').addEventListener('change', renderTable);
 document.getElementById('outcomeFilter').addEventListener('change', renderTable);
 
 renderStatus();
+renderAccountPanel();
 renderCards();
 populateFilters();
 renderTable();
