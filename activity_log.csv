@@ -1,0 +1,2 @@
+logged_at,note,symbols_checked,signals_found
+2026-08-28 15:10:50.499016+00:00,"Scheduled scan 2026-08-28: XAUUSD + XAGUSD scannet, 0 nye signaler. Ordre-eksekvering sprunget over -- MT5-konto identificeret som REAL, ikke DEMO (get_account_info returnerede account_type=real).","XAUUSD, XAGUSD",0
