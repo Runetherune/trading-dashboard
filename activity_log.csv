@@ -3,3 +3,6 @@ logged_at,note,symbols_checked,signals_found
 2026-08-28 17:32:29.646070+00:00,Scan XAUUSD+XAGUSD M15: ingen nye signaler.,"XAUUSD,XAGUSD",0
 2026-08-28 17:39:14.026833+00:00,"Scan af XAUUSD og XAGUSD (M15, 1000 candles) -- ingen nye signaler fundet.","XAUUSD, XAGUSD",0
 2026-08-28 19:19:57.974464+00:00,"Scheduled scan: hentede 5000 M15 candles for XAUUSD og XAGUSD, ingen nye signaler fundet.","XAUUSD,XAGUSD",0
+2026-08-28 19:27:01.879774+00:00,"Scan: 11 nye Powell_KeyOpen signaler fundet (XAUUSD x6, XAGUSD x5), ingen eksekveret - lot size 0 (under broker-minimum ved 0.06% risk).","XAUUSD,XAGUSD",11
+2026-08-28 19:36:10.442858+00:00,"Scheduled scan (hent-priser): XAUUSD + XAGUSD M15, 5000 candles. Ingen nye signaler.","XAUUSD, XAGUSD",0
+2026-08-28 19:57:26.649408+00:00,"Scan 2026-08-28 (5000 M15 candles): XAUUSD + XAGUSD, 0 nye signaler. Ingen ordrer placeret. get_account_info() returnerede account_type=real (som ved forrige scan) -- bruger har bekraeftet at konto 40000231321 er en FundingPips demo/evalueringskonto, men MT5-vaerktoejet eksponerer intet login/server-felt til uafhaengig verifikation.","XAUUSD, XAGUSD",0
