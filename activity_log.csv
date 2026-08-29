@@ -25,3 +25,4 @@ logged_at,note,symbols_checked,signals_found
 2026-08-29 00:01:29.518626+00:00,"Scan: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, konto-status logget","XAUUSD,XAGUSD",0
 2026-08-29 00:16:22.722046+00:00,"Scan 2026-08-29: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, konto-status logget","XAUUSD, XAGUSD",0
 2026-08-29 00:31:37.138216+00:00,"Scan 2026-08-29: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, konto-status logget (balance/equity uaendret 25000)","XAUUSD, XAGUSD",0
+2026-08-29 00:46:27.392631+00:00,"Scan: XAUUSD + XAGUSD M15, 5000 candles. Ingen nye signaler. Konto-status logget.","XAUUSD, XAGUSD",0
