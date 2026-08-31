@@ -36,3 +36,4 @@ logged_at,note,symbols_checked,signals_found
 2026-08-31 19:47:14.233529+00:00,"Scan 2026-08-31 (nat 2): XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, Powell_KeyOpen sprunget over (strat7_powell_capped.py mangler stadig), konto-status opdateret","XAUUSD,XAGUSD",0
 2026-08-31 19:53:16.786962+00:00,"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen med strat7_powell_capped). 1 nyt signal fundet (XAUUSD Powell_KeyOpen short) og eksekveret paa demo-konto.","XAUUSD, XAGUSD",1
 2026-08-31 20:01:56.853929+00:00,"Scan 2026-08-31 (nat 4): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","XAUUSD, XAGUSD",0
+2026-08-31 20:16:59.300579+00:00,"Scan 2026-08-31 (nat 5): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","XAUUSD,XAGUSD",0
