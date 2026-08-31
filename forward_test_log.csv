@@ -10,3 +10,6 @@ logged_at,symbol,strategy,direction,entry_time,entry_price,sl,tp,lot_size,risk_p
 2026-08-28 19:25:55.026821,XAGUSD,Powell_KeyOpen,long,2026-08-28 07:45:00+00:00,68.902,68.571582,69.56283599999999,0,0,IKKE EKSEKVERET (lot size 0 - under broker minimum),
 2026-08-28 19:25:55.030797,XAGUSD,Powell_KeyOpen,long,2026-08-28 15:45:00+00:00,70.643,70.143432,71.642136,0,0,IKKE EKSEKVERET (lot size 0 - under broker minimum),
 2026-08-28 19:25:55.032808,XAGUSD,Powell_KeyOpen,long,2026-08-28 17:30:00+00:00,69.311,67.992742,71.94751600000001,0,0,IKKE EKSEKVERET (lot size 0 - under broker minimum),
+2026-08-31 18:25:36.832300,XAUUSD,Powell_KeyOpen,short,2026-08-31 05:30:00+00:00,4403.0,4435.29288,4338.41424,0,0,IKKE eksekveret - Powell midlertidigt deaktiveret,
+2026-08-31 18:25:36.833789,XAUUSD,Powell_KeyOpen,short,2026-08-31 09:00:00+00:00,4432.13,4452.72768,4390.93464,0,0,IKKE eksekveret - Powell midlertidigt deaktiveret,
+2026-08-31 18:25:42.800593,XAGUSD,Powell_KeyOpen,short,2026-08-31 08:30:00+00:00,66.568,66.924582,65.85483599999999,0,0,IKKE eksekveret - Powell midlertidigt deaktiveret,
