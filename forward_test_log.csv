@@ -14,3 +14,4 @@ logged_at,symbol,strategy,direction,entry_time,entry_price,sl,tp,lot_size,risk_p
 2026-08-31 18:25:36.833789,XAUUSD,Powell_KeyOpen,short,2026-08-31 09:00:00+00:00,4432.13,4452.72768,4390.93464,0.0,0.0,IKKE eksekveret - Powell midlertidigt deaktiveret,
 2026-08-31 18:25:42.800593,XAGUSD,Powell_KeyOpen,short,2026-08-31 08:30:00+00:00,66.568,66.924582,65.85483599999999,0.0,0.0,IKKE eksekveret - Powell midlertidigt deaktiveret,
 2026-08-31 19:51:59.812832,XAUUSD,Powell_KeyOpen,short,2026-08-31 15:30:00+00:00,4440.57,4458.8499,4404.010199999999,0.01,0.073,EKSEKVERET (demo),11514671.0
+2026-09-01 01:46:19.179196,XAUUSD,CRT_TBS,long,2026-09-01 04:30:00+00:00,4436.58,4427.89767,4464.02,0.03,0.104,FEJLET - AutoTrading disabled by server (retcode 10026),
