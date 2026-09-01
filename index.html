@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trading Agent — Dashboard</title>
+<title>Rune Main — Trading Agent</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0b0d10;
+    --bg: #0a0c0f;
     --surface: #14171c;
-    --surface-raised: #1b1f25;
-    --hairline: #23282f;
+    --surface-raised: #1a1e24;
+    --hairline: #21262d;
     --gold-a: #a9822f;
     --gold-b: #f0d488;
     --silver-a: #5b6b7d;
@@ -23,15 +23,21 @@
     --win: #4ade80;
     --loss: #f2685c;
     --pending: #6b7280;
+    --radius-lg: 14px;
+    --radius-sm: 8px;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: 'Manrope', -apple-system, Segoe UI, sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(1200px 500px at 10% -10%, rgba(169,130,47,0.06), transparent),
+      radial-gradient(1000px 400px at 90% 0%, rgba(91,107,125,0.05), transparent),
+      var(--bg);
     color: var(--ink);
     margin: 0;
-    padding: 20px 20px 60px;
     -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
   }
   .num { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
   .metal-xau {
@@ -44,50 +50,89 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
     font-weight: 700;
   }
-  header { max-width: 1180px; margin: 0 auto 24px; }
-  h1 {
-    font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 10px 0;
-    letter-spacing: -0.01em;
+
+  /* ---------- App shell ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(10,12,15,0.85); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--hairline);
   }
-  .statusbar {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    font-size: 13px; color: var(--ink-dim);
+  .topbar-inner {
+    max-width: 1180px; margin: 0 auto; padding: 16px 20px 0;
+  }
+  .brand-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .brand { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
+  .brand .metal-xau, .brand .metal-xag { font-weight: 800; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-dim);
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 999px; padding: 5px 12px 5px 10px;
   }
   .dot {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--win);
-    box-shadow: 0 0 0 0 rgba(74,222,128,0.6);
-    animation: pulse 2s infinite;
-    flex-shrink: 0;
+    width: 7px; height: 7px; border-radius: 50%; background: var(--win); flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(74,222,128,0.6); animation: pulse 2s infinite;
   }
   @keyframes pulse {
     0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
     70% { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
     100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
   }
-  .statusbar .sep { color: var(--ink-faint); }
-  main { max-width: 1180px; margin: 0 auto; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 28px; }
-  .acct-panel {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;
-    margin-bottom: 22px;
-  }
-  .acct-box {
-    background: linear-gradient(150deg, var(--surface), var(--surface-raised));
-    border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 18px;
-  }
-  .acct-box .acct-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
-  .acct-box .big-num { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; color: #fff; }
-  .acct-box .big-label { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
-  .acct-box .subrow { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-dim); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hairline); }
-  .acct-box .subrow span:last-child { font-family: 'IBM Plex Mono', monospace; color: var(--ink); }
-  .acct-stale { color: var(--pending) !important; }
 
+  .tabs { display: flex; gap: 4px; }
+  .tab-btn {
+    appearance: none; border: none; background: none; cursor: pointer;
+    color: var(--ink-dim); font-family: 'Manrope', sans-serif; font-size: 13.5px; font-weight: 600;
+    padding: 10px 4px; margin-right: 22px; border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active {
+    color: #fff;
+    border-bottom: 2px solid var(--gold-b);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 60px; }
+  h2.section { font-size: 13.5px; color: var(--ink); margin: 0 0 12px; font-weight: 700; }
+  .section-sub { font-size: 12px; color: var(--ink-faint); margin: -8px 0 16px; }
+
+  /* ---------- Cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+  .card h3 { font-size: 13px; color: var(--ink); margin: 0 0 2px 0; font-weight: 700; }
+  .card .role { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .stat-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; }
+  .stat-row .label { color: var(--ink-dim); }
+  .stat-row .val { font-family: 'IBM Plex Mono', monospace; }
+  .pnl-pos { color: var(--win); font-weight: 600; }
+  .pnl-neg { color: var(--loss); font-weight: 600; }
+  .sparkline { margin-top: 10px; height: 32px; }
+  .sparkline svg { width: 100%; height: 100%; display: block; }
+
+  .empty-state {
+    border: 1px dashed var(--hairline); border-radius: var(--radius-lg); padding: 30px 22px;
+    text-align: center; color: var(--ink-dim); font-size: 13px; line-height: 1.65;
+  }
+  .empty-state strong { color: var(--ink); }
+
+  /* ---------- Hero equity chart ---------- */
+  .hero-chart { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg); padding: 20px 22px; margin-bottom: 28px; }
+  .hero-chart .hero-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .hero-chart .hero-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .hero-chart .hero-return { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
+  .hero-chart svg { width: 100%; height: 220px; display: block; }
+  .hero-chart .axis-label { font-size: 10px; fill: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
+
+  /* ---------- Risk gauges ---------- */
   .risk-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 28px; }
-  .risk-box { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 18px; }
+  .risk-box { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg); padding: 16px 18px; }
   .risk-box .risk-title { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
   .risk-box .risk-sub { font-size: 10.5px; color: var(--ink-faint); margin-bottom: 12px; }
   .gauge-track { height: 8px; background: #1e2126; border-radius: 4px; overflow: hidden; position: relative; }
-  .gauge-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .gauge-fill { display: block; height: 100%; border-radius: 4px; transition: width 0.4s ease; }
   .gauge-fill.ok { background: var(--win); }
   .gauge-fill.warn { background: #f5b942; }
   .gauge-fill.danger { background: var(--loss); }
@@ -97,13 +142,7 @@
   .payout-dot { width: 16px; height: 16px; border-radius: 4px; background: #1e2126; border: 1px solid var(--hairline); }
   .payout-dot.filled { background: var(--win); border-color: var(--win); }
 
-  .hero-chart { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 22px; margin-bottom: 28px; }
-  .hero-chart .hero-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
-  .hero-chart .hero-title { font-size: 13px; font-weight: 700; color: var(--ink); }
-  .hero-chart .hero-return { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; }
-  .hero-chart svg { width: 100%; height: 220px; display: block; }
-  .hero-chart .axis-label { font-size: 10px; fill: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
-
+  /* ---------- Strategy table ---------- */
   .strategy-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 28px; }
   .strategy-table th { text-align: left; color: var(--ink-faint); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; padding: 9px 10px; border-bottom: 1px solid var(--hairline); }
   .strategy-table td { padding: 10px 10px; border-bottom: 1px solid #191d22; font-family: 'IBM Plex Mono', monospace; }
@@ -111,33 +150,13 @@
   .strategy-bar-fill { display: block; height: 100%; border-radius: 3px; }
   .strategy-bar-fill.ok { background: var(--win); }
   .strategy-bar-fill.danger { background: var(--loss); }
-  .card {
-    background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
-    padding: 16px 18px;
-  }
-  .card h2 { font-size: 13px; color: var(--ink); margin: 0 0 2px 0; font-weight: 700; }
-  .card .role { font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-  .stat-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 3px 0; }
-  .stat-row .label { color: var(--ink-dim); }
-  .stat-row .val { font-family: 'IBM Plex Mono', monospace; }
-  .pnl-pos { color: var(--win); font-weight: 600; }
-  .pnl-neg { color: var(--loss); font-weight: 600; }
-  .sparkline { margin-top: 10px; height: 32px; }
-  .sparkline svg { width: 100%; height: 100%; display: block; }
 
-  h2.section { font-size: 14px; color: var(--ink); margin: 32px 0 12px; font-weight: 700; }
-
-  .filters { margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  /* ---------- Trades table ---------- */
+  .filters { margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
   select {
     background: var(--surface); color: var(--ink); border: 1px solid var(--hairline);
-    border-radius: 8px; padding: 7px 10px; font-size: 12.5px; font-family: inherit;
+    border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12.5px; font-family: inherit;
   }
-
-  .empty-state {
-    border: 1px dashed var(--hairline); border-radius: 12px; padding: 28px 20px;
-    text-align: center; color: var(--ink-dim); font-size: 13px; line-height: 1.6;
-  }
-
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   th {
     text-align: left; color: var(--ink-faint); font-weight: 600; font-size: 10.5px;
@@ -155,11 +174,7 @@
 
   .desktop-table { display: block; }
   .mobile-cards { display: none; }
-
-  .trade-card {
-    background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px;
-    padding: 12px 14px; margin-bottom: 8px; font-size: 12.5px;
-  }
+  .trade-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; font-size: 12.5px; }
   .trade-card .row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .trade-card .symbol { font-weight: 700; font-size: 14px; font-family: 'Manrope', sans-serif; }
   .trade-card .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-family: 'IBM Plex Mono', monospace; color: var(--ink-dim); font-size: 11.5px; }
@@ -169,226 +184,185 @@
   @media (max-width: 720px) {
     .desktop-table { display: none; }
     .mobile-cards { display: block; }
-    body { padding: 14px 14px 50px; }
+    main { padding: 20px 14px 50px; }
+    .topbar-inner { padding: 14px 14px 0; }
   }
 
-  .activity-log { max-height: 420px; overflow-y: auto; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface); }
-  .activity-item { padding: 11px 14px; border-bottom: 1px solid #191d22; }
+  /* ---------- Activity log ---------- */
+  .activity-log { max-height: 520px; overflow-y: auto; border: 1px solid var(--hairline); border-radius: var(--radius-lg); background: var(--surface); }
+  .activity-item { padding: 12px 16px; border-bottom: 1px solid #191d22; }
   .activity-item:last-child { border-bottom: none; }
   .activity-time { font-size: 10.5px; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
   .activity-note { font-size: 12.5px; margin-top: 3px; color: var(--ink); }
   .activity-meta { font-size: 11px; color: var(--ink-dim); margin-top: 3px; }
 
+  /* ---------- Accounts tab ---------- */
+  .account-detail-card {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg);
+    padding: 20px 22px; margin-bottom: 16px;
+  }
+  .account-detail-card .adc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .adc-name { font-size: 16px; font-weight: 800; color: #fff; }
+  .adc-role-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 999px; }
+  .adc-role-badge.leader { background: rgba(169,130,47,0.18); color: var(--gold-b); }
+  .adc-role-badge.follower { background: rgba(91,107,125,0.18); color: var(--silver-b); }
+  .adc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  .adc-stat .adc-label { font-size: 10.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .adc-stat .adc-value { font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: var(--ink); }
+
+  .add-account-card {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-lg);
+    padding: 22px 24px; margin-top: 24px;
+  }
+  .add-account-card h3 { font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 6px; }
+  .add-account-card .lede { font-size: 12.5px; color: var(--ink-dim); margin: 0 0 20px; max-width: 62ch; line-height: 1.6; }
+  .step-list { counter-reset: step; list-style: none; margin: 0; padding: 0; }
+  .step-list li {
+    counter-increment: step; position: relative; padding: 0 0 18px 34px; font-size: 12.5px;
+    color: var(--ink-dim); line-height: 1.6; border-left: 1px solid var(--hairline); margin-left: 11px;
+  }
+  .step-list li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .step-list li::before {
+    counter(step); content: counter(step);
+    position: absolute; left: -12px; top: -2px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--surface-raised); border: 1px solid var(--hairline); color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-list strong { color: var(--ink); }
+  .step-list code {
+    background: #1e2126; border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--gold-b);
+  }
+
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 4px; }
+  :focus-visible { outline: 2px solid var(--gold-b); outline-offset: 2px; }
 </style>
 </head>
 <body>
-<header>
-  <h1>Trading Agent — Dashboard</h1>
-  <div class="statusbar">
-    <span class="dot" id="statusDot"></span>
-    <span id="statusText">Genereret for et øjeblik siden</span>
-    <span class="sep">·</span>
-    <span id="totalSignals">0 signaler</span>
-    <span class="sep">·</span>
-    <span id="totalAccounts">0 konti</span>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-row">
+      <div class="brand">Rune Main</div>
+      <div class="status-pill">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Opdateret for et øjeblik siden</span>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview">Oversigt</button>
+      <button class="tab-btn" data-tab="accounts">Konti</button>
+      <button class="tab-btn" data-tab="trades">Trades</button>
+      <button class="tab-btn" data-tab="activity">Aktivitet</button>
+    </div>
   </div>
-</header>
+</div>
 
 <main>
-  <div class="acct-panel" id="acctPanel"></div>
 
-  <div class="hero-chart" id="heroChart" style="display:none;">
-    <div class="hero-header">
-      <span class="hero-title">Egenkapital over tid</span>
-      <span class="hero-return" id="heroReturn"></span>
+  <section class="tab-panel active" id="tab-overview">
+    <div class="hero-chart" id="heroChart" style="display:none;">
+      <div class="hero-header">
+        <span class="hero-title">Egenkapital over tid</span>
+        <span class="hero-return" id="heroReturn"></span>
+      </div>
+      <svg id="heroChartSvg" viewBox="0 0 800 220" preserveAspectRatio="none"></svg>
     </div>
-    <svg id="heroChartSvg" viewBox="0 0 800 220" preserveAspectRatio="none"></svg>
-  </div>
 
-  <h2 class="section">FundingPips Zero — status</h2>
-  <div class="risk-panel" id="riskPanel"></div>
+    <h2 class="section">FundingPips Zero — status</h2>
+    <div class="risk-panel" id="riskPanel"></div>
 
-  <div class="cards" id="cards"></div>
-
-  <h2 class="section">Performance per strategi</h2>
-  <div id="strategyEmpty" class="empty-state" style="display:none;">
-    Ingen lukkede trades endnu — performance per strategi vises her, så snart der er data.
-  </div>
-  <table class="strategy-table" id="strategyTable" style="display:none;">
-    <thead><tr><th>Strategi</th><th>Trades</th><th>Winrate</th><th>Total PnL</th></tr></thead>
-    <tbody id="strategyBody"></tbody>
-  </table>
-
-  <h2 class="section">Trades</h2>
-  <div class="filters">
-    <select id="acctFilter"><option value="">Alle konti</option></select>
-    <select id="stratFilter"><option value="">Alle strategier</option></select>
-    <select id="outcomeFilter">
-      <option value="">Alle udfald</option>
-      <option value="win">Kun vindere</option>
-      <option value="loss">Kun tabere</option>
-      <option value="pending">Kun åbne/ikke-graderede</option>
-    </select>
-  </div>
-
-  <div id="tradesEmpty" class="empty-state" style="display:none;">
-    Ingen trades endnu. Systemet scanner hvert 15. minut og venter på et signal
-    der matcher en af de fire strategiers regler — det kan tage fra timer til
-    et par dage, afhængig af markedet.
-  </div>
-
-  <div class="desktop-table">
-    <table id="tradesTable">
-      <thead>
-        <tr>
-          <th>Tidspunkt</th><th>Konto</th><th>Symbol</th><th>Strategi</th><th>Retning</th>
-          <th>Entry</th><th>SL</th><th>TP</th><th>Lot</th><th>Risk%</th><th>Udfald</th><th>PnL</th><th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="tradesBody"></tbody>
+    <h2 class="section">Performance per strategi</h2>
+    <div id="strategyEmpty" class="empty-state" style="display:none;"></div>
+    <table class="strategy-table" id="strategyTable" style="display:none;">
+      <thead><tr><th>Strategi</th><th>Trades</th><th>Winrate</th><th>Total PnL</th></tr></thead>
+      <tbody id="strategyBody"></tbody>
     </table>
-  </div>
-  <div class="mobile-cards" id="tradesCards"></div>
+  </section>
 
-  <h2 class="section">Aktivitetslog</h2>
-  <div id="activityEmpty" class="empty-state" style="display:none;">
-    Ingen aktivitet logget endnu. Ved næste scan noterer Claude her hvad der
-    blev tjekket og fundet.
-  </div>
-  <div class="activity-log" id="activityLog"></div>
+  <section class="tab-panel" id="tab-accounts">
+    <h2 class="section">Konti</h2>
+    <div class="section-sub" id="accountsSub"></div>
+    <div id="accountsDetailList"></div>
+
+    <div class="add-account-card">
+      <h3>Tilføj en følger-konto</h3>
+      <p class="lede">
+        En følger-konto kopierer automatisk lederens trades, skaleret til sin egen saldo.
+        Det kræver lokal opsætning på din maskine — dashboardet kan vise status for flere
+        konti, men kan ikke selv oprette forbindelsen, da det kræver adgang til din computer.
+      </p>
+      <ol class="step-list">
+        <li>Installér en <strong>separat MT5-terminal</strong> og log ind på den nye konto (MT5 kan kun holde ét login pr. kørende terminal).</li>
+        <li>Tilføj en ny MCP-forbindelse i Claude Code: <code>claude mcp add metatrader_2 --scope user -- metatrader-mcp-server --login &lt;LOGIN&gt; --password "&lt;KODE&gt;" --server &lt;SERVER&gt; --path "&lt;STI&gt;\terminal64.exe" --transport stdio</code></li>
+        <li>Åbn <code>accounts_config.py</code> og tilføj kontoen til <code>ACCOUNTS</code>-dictet med navn, MCP-servernavn og saldo.</li>
+        <li>Opdater <code>run_scan.bat</code>'s prompt, så den også eksekverer hvert nyt signal på den nye konto, sizet til dens egen saldo.</li>
+        <li>Kør scanneren — den nye konto dukker automatisk op her, på Trades-fanen, og i risikomålerne ovenfor.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-trades">
+    <h2 class="section">Trades</h2>
+    <div class="filters">
+      <select id="acctFilter"><option value="">Alle konti</option></select>
+      <select id="stratFilter"><option value="">Alle strategier</option></select>
+      <select id="outcomeFilter">
+        <option value="">Alle udfald</option>
+        <option value="win">Kun vindere</option>
+        <option value="loss">Kun tabere</option>
+        <option value="pending">Kun åbne/ikke-graderede</option>
+      </select>
+    </div>
+
+    <div id="tradesEmpty" class="empty-state" style="display:none;"></div>
+
+    <div class="desktop-table">
+      <table id="tradesTable">
+        <thead>
+          <tr>
+            <th>Tidspunkt</th><th>Konto</th><th>Symbol</th><th>Strategi</th><th>Retning</th>
+            <th>Entry</th><th>SL</th><th>TP</th><th>Lot</th><th>Risk%</th><th>Udfald</th><th>PnL</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tradesBody"></tbody>
+      </table>
+    </div>
+    <div class="mobile-cards" id="tradesCards"></div>
+  </section>
+
+  <section class="tab-panel" id="tab-activity">
+    <h2 class="section">Aktivitetslog</h2>
+    <div id="activityEmpty" class="empty-state" style="display:none;"></div>
+    <div class="activity-log" id="activityLog"></div>
+  </section>
+
 </main>
 
 <script>
 const trades = [{"logged_at":"2026-09-01T08:45:53.532","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-09-01T05:30:00.000Z","entry_price":4431.93,"sl":4449.9321,"tp":4395.9258,"lot_size":0.01,"risk_pct_used":0.072,"status":"FEJLET - AutoTrading disabled by server (retcode 10026)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-09-01T01:46:19.179","symbol":"XAUUSD","strategy":"CRT_TBS","direction":"long","entry_time":"2026-09-01T04:30:00.000Z","entry_price":4436.58,"sl":4427.89767,"tp":4464.02,"lot_size":0.03,"risk_pct_used":0.104,"status":"FEJLET - AutoTrading disabled by server (retcode 10026)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-09-01T11:15:10.955","symbol":"XAUUSD","strategy":"CRT_TBS","direction":"long","entry_time":"2026-09-01T01:00:00.000Z","entry_price":4436.57,"sl":4427.80776,"tp":4463.99,"lot_size":0.03,"risk_pct_used":0.105,"status":"FEJLET - AutoTrading disabled by client (retcode 10027)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-31T19:51:59.812","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-31T15:30:00.000Z","entry_price":4440.57,"sl":4458.8499,"tp":4404.0102,"lot_size":0.01,"risk_pct_used":0.073,"status":"EKSEKVERET (demo)","mt5_ticket":11514671.0,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-31T18:25:36.833","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-31T09:00:00.000Z","entry_price":4432.13,"sl":4452.72768,"tp":4390.93464,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE eksekveret - Powell midlertidigt deaktiveret","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-31T18:25:42.800","symbol":"XAGUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-31T08:30:00.000Z","entry_price":66.568,"sl":66.924582,"tp":65.854836,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE eksekveret - Powell midlertidigt deaktiveret","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-31T18:25:36.832","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-31T05:30:00.000Z","entry_price":4403.0,"sl":4435.29288,"tp":4338.41424,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE eksekveret - Powell midlertidigt deaktiveret","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:55.032","symbol":"XAGUSD","strategy":"Powell_KeyOpen","direction":"long","entry_time":"2026-08-28T17:30:00.000Z","entry_price":69.311,"sl":67.992742,"tp":71.947516,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:46.031","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-28T17:00:00.000Z","entry_price":4546.1,"sl":4640.63274,"tp":4357.03452,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:55.030","symbol":"XAGUSD","strategy":"Powell_KeyOpen","direction":"long","entry_time":"2026-08-28T15:45:00.000Z","entry_price":70.643,"sl":70.143432,"tp":71.642136,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:46.026","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-28T15:30:00.000Z","entry_price":4591.92,"sl":4611.31422,"tp":4553.13156,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:55.026","symbol":"XAGUSD","strategy":"Powell_KeyOpen","direction":"long","entry_time":"2026-08-28T07:45:00.000Z","entry_price":68.902,"sl":68.571582,"tp":69.562836,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:46.025","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-28T06:30:00.000Z","entry_price":4581.92,"sl":4599.18,"tp":4547.4,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:55.025","symbol":"XAGUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-27T16:30:00.000Z","entry_price":67.869,"sl":68.490708,"tp":66.625584,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:46.023","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-27T16:30:00.000Z","entry_price":4578.61,"sl":4602.39642,"tp":4531.03716,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:46.022","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-27T15:30:00.000Z","entry_price":4587.59,"sl":4605.63288,"tp":4551.50424,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:55.023","symbol":"XAGUSD","strategy":"Powell_KeyOpen","direction":"short","entry_time":"2026-08-27T15:30:00.000Z","entry_price":67.977,"sl":68.51175,"tp":66.9075,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null},{"logged_at":"2026-08-28T19:25:46.020","symbol":"XAUUSD","strategy":"Powell_KeyOpen","direction":"long","entry_time":"2026-08-27T09:15:00.000Z","entry_price":4610.46,"sl":4590.42076,"tp":4650.53848,"lot_size":0.0,"risk_pct_used":0.0,"status":"IKKE EKSEKVERET (lot size 0 - under broker minimum)","mt5_ticket":null,"account":"Rune Main","role":"leader","outcome":null,"pnl_usd":null}] || [];
 const summary = {"Rune Main": {"role": "leader", "total_signals": 18, "closed_trades": 0, "open_or_pending": 18, "wins": 0, "losses": 0, "winrate": null, "total_pnl_usd": 0.0, "equity_curve": []}};
 const strategyBreakdown = [] || [];
-const activity = [{"logged_at":"2026-09-01T17:46:46.666Z","note":"Scan 2026-09-01 (41): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:39:54.253Z","note":"Scan 2026-09-01 (40): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:31:16.049Z","note":"Scan 2026-09-01 (39): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:16:22.163Z","note":"Scan (38): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:01:45.866Z","note":"Scan 2026-09-01 (37): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:46:22.318Z","note":"Scan 2026-09-01 (36): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:32:02.765Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:16:36.486Z","note":"Scan XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:01:28.476Z","note":"Scan 2026-09-01 (33): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:46:39.995Z","note":"Scan 2026-09-01 (32): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:31:07.806Z","note":"Scan 2026-09-01 (31): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:16:40.824Z","note":"Scan 2026-09-01 (30): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:02:05.528Z","note":"Scan 2026-09-01 (29): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:46:15.216Z","note":"Scan 2026-09-01 (28): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:32:01.975Z","note":"Scan 2026-09-01 (27): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage (kun balance-indbetaling i historik), konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:16:45.514Z","note":"Scan 2026-09-01 (26): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:01:11.565Z","note":"Scan 2026-09-01 (25): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). Ingen lukkede deals sidste 7 dage -- reconcile koert med 0 opdateringer.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:46:56.510Z","note":"Scan (24): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:31:48.100Z","note":"Scan 2026-09-01 (23): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:16:24.920Z","note":"Scan 2026-09-01 (22): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:01:28.856Z","note":"Scan 2026-09-01 (21): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:46:21.208Z","note":"Scan 2026-09-01 (20): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:31:16.321Z","note":"Scan 2026-09-01 (19): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:16:38.994Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage (ingen afstemning noedvendig), konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:02:31.403Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:46:48.009Z","note":"Scan 2026-09-01 (16): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:34:17.609Z","note":"Scan 2026-09-01 (15): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:31:46.158Z","note":"Scan 2026-09-01 (14): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:25:17.622Z","note":"Scan (MetaQuotes-Demo 5055310793): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:15:39.876Z","note":"Scan XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 1 nyt signal (XAUUSD CRT_TBS long) fundet, ordreplacering FEJLEDE - AutoTrading disabled by client (retcode 10027) i MT5-terminalen.","symbols_checked":"XAUUSD, XAGUSD","signals_found":1},{"logged_at":"2026-09-01T11:01:25.014Z","note":"Scan (11): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:46:25.375Z","note":"Scan 2026-09-01 (10): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:31:46.471Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:16:15.825Z","note":"Scan (8): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). Ingen nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:01:22.564Z","note":"Scan 2026-09-01 (7): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:46:25.568Z","note":"Scan 2026-09-01 (6): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:31:24.485Z","note":"Scan 2026-09-01 (5): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:16:27.965Z","note":"Scan 2026-09-01 (4): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:01:19.721Z","note":"Scan 2026-09-01 (3): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T08:46:21.227Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 1 nyt signal (XAUUSD Powell_KeyOpen short), ordreplacering fejlede - AutoTrading disabled by server (retcode 10026).","symbols_checked":"XAUUSD,XAGUSD","signals_found":1},{"logged_at":"2026-09-01T08:31:37.536Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T08:16:31.230Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T08:01:59.076Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:46:35.948Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:31:20.996Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:16:43.304Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:01:17.869Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:46:27.896Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:31:12.154Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 0 nye signaler. Konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:17:09.360Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:01:11.299Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:46:19.248Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 0 nye signaler. Konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:31:16.727Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:16:08.618Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:02:01.448Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:46:34.260Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:31:12.102Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:16:04.035Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret (balance\/equity \\,993.90, 0 aabne positioner).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:01:13.923Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:46:16.132Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:31:18.256Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:16:15.807Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped). 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:01:24.564Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:46:19.803Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:31:27.038Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:17:50.093Z","note":"Scan 2026-09-01 (nat 29): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:01:16.127Z","note":"Scan 2026-09-01 (nat 28): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T01:47:04.783Z","note":"Scan 2026-09-01 (nat 27): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped). 1 nyt signal (XAUUSD CRT_TBS long), ordreplacering fejlede - AutoTrading disabled by server.","symbols_checked":"XAUUSD,XAGUSD","signals_found":1},{"logged_at":"2026-09-01T01:31:04.655Z","note":"Scan 2026-09-01 (nat 26): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T01:16:15.153Z","note":"Scan 2026-09-01 (nat 25): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T01:01:37.656Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:46:07.399Z","note":"Scan (nat 23): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:31:22.015Z","note":"Scan 2026-09-01 (nat 22): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:16:53.242Z","note":"Scan 2026-09-01 (nat 21): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:01:25.787Z","note":"Scan 2026-09-01 (nat 20): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:46:45.107Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:31:10.445Z","note":"Scan (nat 18): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:16:25.181Z","note":"Scan 2026-09-01 (nat 17): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:01:23.043Z","note":"Scan (nat 16): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:46:38.672Z","note":"Scan 2026-09-01 (nat 15): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:31:28.844Z","note":"Scan (nat 14): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:16:22.858Z","note":"Scan 2026-08-31 (nat 13): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:01:41.571Z","note":"Scan 2026-08-31 (nat 12): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:46:29.017Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:31:21.997Z","note":"Scan 2026-08-31 (nat 10): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:16:14.951Z","note":"Scan (nat 9): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:01:26.007Z","note":"Scan 2026-08-31 (nat 8): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:46:47.255Z","note":"Scan 2026-08-31 (nat 7): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:31:29.638Z","note":"Scan 2026-08-31 (nat 6): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:16:59.300Z","note":"Scan 2026-08-31 (nat 5): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:01:56.853Z","note":"Scan 2026-08-31 (nat 4): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:53:16.786Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen med strat7_powell_capped). 1 nyt signal fundet (XAUUSD Powell_KeyOpen short) og eksekveret paa demo-konto.","symbols_checked":"XAUUSD, XAGUSD","signals_found":1},{"logged_at":"2026-08-31T19:47:14.233Z","note":"Scan 2026-08-31 (nat 2): XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, Powell_KeyOpen sprunget over (strat7_powell_capped.py mangler stadig), konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:32:19.336Z","note":"Scan 2026-08-31 (nat): XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler. Powell_KeyOpen sprunget over -- strat7_powell_capped.py mangler stadig paa disk.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:18:07.573Z","note":"Scan 2026-08-31: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler. Powell_KeyOpen sprunget over -- strat7_powell_capped.py mangler stadig paa disk (strat7_powell.py indeholder ved en fejl capped-variantens kode og importerer sig selv).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:02:27.574Z","note":"Scan 2026-08-31 (sen): XAUUSD+XAGUSD M15 5000 candles. 0 nye signaler (CRT_TBS, Trend_OB, ORB). Powell_KeyOpen sprunget over -- strat7_powell_capped.py modul mangler stadig paa disk (samme gab som tidligere scans), saa ingen Powell-signaler kunne evalueres. Ingen ordrer eksekveret. Konto-status opdateret: balance\/equity $25,000, 0 aabne positioner.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T18:49:29.146Z","note":"Scan XAUUSD+XAGUSD M15 5000 candles. 0 nye signaler (CRT_TBS\/Trend_OB\/ORB). Powell_KeyOpen sprunget over: strat7_powell_capped.py mangler paa disk (kun strat7_powell.py findes, og dets indhold er selv-importerende capped-wrapper -- base-modulet er tabt). live_scan.py patchet til at faile graceful i stedet for at crashe hele scannet.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T18:31:58.626Z","note":"Scan 2026-08-31: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler (inkl. Powell), konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T18:26:24.631Z","note":"Scan 2026-08-31: XAUUSD+XAGUSD M15 5000 candles. 3 nye Powell_KeyOpen signaler fundet men IKKE eksekveret (Powell midlertidigt deaktiveret pga. lot-size problem). 0 signaler fra CRT_TBS\/Trend_OB\/ORB. Konto-status logget.","symbols_checked":"XAUUSD, XAGUSD","signals_found":3},{"logged_at":"2026-08-29T01:31:27.890Z","note":"Scan 2026-08-29: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, konto-status logget","symbols_checked":"XAUUSD,XAGUSD","signals_found":0}] || [];
-const accountStatus = {"Rune Main": {"logged_at": "2026-09-01 17:46:46.640297+00:00", "balance": 25000.0, "equity": 25000.0, "margin": 0.0, "free_margin": 25000.0, "margin_level": 0.0, "open_positions_count": 0, "currency": "USD"}};
-const generatedAt = "2026-09-01T17:46:46.775795+00:00";
+const activity = [{"logged_at":"2026-09-01T17:53:59.969Z","note":"Scan udfoert: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:46:46.666Z","note":"Scan 2026-09-01 (41): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:39:54.253Z","note":"Scan 2026-09-01 (40): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:31:16.049Z","note":"Scan 2026-09-01 (39): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:16:22.163Z","note":"Scan (38): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T17:01:45.866Z","note":"Scan 2026-09-01 (37): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:46:22.318Z","note":"Scan 2026-09-01 (36): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:32:02.765Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:16:36.486Z","note":"Scan XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T16:01:28.476Z","note":"Scan 2026-09-01 (33): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:46:39.995Z","note":"Scan 2026-09-01 (32): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:31:07.806Z","note":"Scan 2026-09-01 (31): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:16:40.824Z","note":"Scan 2026-09-01 (30): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T15:02:05.528Z","note":"Scan 2026-09-01 (29): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:46:15.216Z","note":"Scan 2026-09-01 (28): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:32:01.975Z","note":"Scan 2026-09-01 (27): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage (kun balance-indbetaling i historik), konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:16:45.514Z","note":"Scan 2026-09-01 (26): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T14:01:11.565Z","note":"Scan 2026-09-01 (25): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). Ingen lukkede deals sidste 7 dage -- reconcile koert med 0 opdateringer.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:46:56.510Z","note":"Scan (24): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:31:48.100Z","note":"Scan 2026-09-01 (23): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:16:24.920Z","note":"Scan 2026-09-01 (22): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T13:01:28.856Z","note":"Scan 2026-09-01 (21): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:46:21.208Z","note":"Scan 2026-09-01 (20): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:31:16.321Z","note":"Scan 2026-09-01 (19): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:16:38.994Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, 0 lukkede deals sidste 7 dage (ingen afstemning noedvendig), konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T12:02:31.403Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:46:48.009Z","note":"Scan 2026-09-01 (16): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:34:17.609Z","note":"Scan 2026-09-01 (15): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:31:46.158Z","note":"Scan 2026-09-01 (14): XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:25:17.622Z","note":"Scan (MetaQuotes-Demo 5055310793): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T11:15:39.876Z","note":"Scan XAUUSD+XAGUSD M15 5000 candles (MetaQuotes-Demo 5055310793), alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 1 nyt signal (XAUUSD CRT_TBS long) fundet, ordreplacering FEJLEDE - AutoTrading disabled by client (retcode 10027) i MT5-terminalen.","symbols_checked":"XAUUSD, XAGUSD","signals_found":1},{"logged_at":"2026-09-01T11:01:25.014Z","note":"Scan (11): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:46:25.375Z","note":"Scan 2026-09-01 (10): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:31:46.471Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:16:15.825Z","note":"Scan (8): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). Ingen nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T10:01:22.564Z","note":"Scan 2026-09-01 (7): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:46:25.568Z","note":"Scan 2026-09-01 (6): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:31:24.485Z","note":"Scan 2026-09-01 (5): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:16:27.965Z","note":"Scan 2026-09-01 (4): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T09:01:19.721Z","note":"Scan 2026-09-01 (3): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T08:46:21.227Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 1 nyt signal (XAUUSD Powell_KeyOpen short), ordreplacering fejlede - AutoTrading disabled by server (retcode 10026).","symbols_checked":"XAUUSD,XAGUSD","signals_found":1},{"logged_at":"2026-09-01T08:31:37.536Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T08:16:31.230Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T08:01:59.076Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:46:35.948Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:31:20.996Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:16:43.304Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T07:01:17.869Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:46:27.896Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:31:12.154Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 0 nye signaler. Konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:17:09.360Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T06:01:11.299Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:46:19.248Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped). 0 nye signaler. Konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:31:16.727Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:16:08.618Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T05:02:01.448Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:46:34.260Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:31:12.102Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:16:04.035Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret (balance\/equity \\,993.90, 0 aabne positioner).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T04:01:13.923Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:46:16.132Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:31:18.256Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:16:15.807Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped). 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T03:01:24.564Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:46:19.803Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:31:27.038Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:17:50.093Z","note":"Scan 2026-09-01 (nat 29): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T02:01:16.127Z","note":"Scan 2026-09-01 (nat 28): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T01:47:04.783Z","note":"Scan 2026-09-01 (nat 27): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped). 1 nyt signal (XAUUSD CRT_TBS long), ordreplacering fejlede - AutoTrading disabled by server.","symbols_checked":"XAUUSD,XAGUSD","signals_found":1},{"logged_at":"2026-09-01T01:31:04.655Z","note":"Scan 2026-09-01 (nat 26): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T01:16:15.153Z","note":"Scan 2026-09-01 (nat 25): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T01:01:37.656Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:46:07.399Z","note":"Scan (nat 23): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:31:22.015Z","note":"Scan 2026-09-01 (nat 22): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:16:53.242Z","note":"Scan 2026-09-01 (nat 21): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-09-01T00:01:25.787Z","note":"Scan 2026-09-01 (nat 20): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:46:45.107Z","note":"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:31:10.445Z","note":"Scan (nat 18): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:16:25.181Z","note":"Scan 2026-09-01 (nat 17): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T23:01:23.043Z","note":"Scan (nat 16): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:46:38.672Z","note":"Scan 2026-09-01 (nat 15): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:31:28.844Z","note":"Scan (nat 14): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:16:22.858Z","note":"Scan 2026-08-31 (nat 13): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T22:01:41.571Z","note":"Scan 2026-08-31 (nat 12): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:46:29.017Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:31:21.997Z","note":"Scan 2026-08-31 (nat 10): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:16:14.951Z","note":"Scan (nat 9): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T21:01:26.007Z","note":"Scan 2026-08-31 (nat 8): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:46:47.255Z","note":"Scan 2026-08-31 (nat 7): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:31:29.638Z","note":"Scan 2026-08-31 (nat 6): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:16:59.300Z","note":"Scan 2026-08-31 (nat 5): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T20:01:56.853Z","note":"Scan 2026-08-31 (nat 4): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:53:16.786Z","note":"Scan: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen med strat7_powell_capped). 1 nyt signal fundet (XAUUSD Powell_KeyOpen short) og eksekveret paa demo-konto.","symbols_checked":"XAUUSD, XAGUSD","signals_found":1},{"logged_at":"2026-08-31T19:47:14.233Z","note":"Scan 2026-08-31 (nat 2): XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler, Powell_KeyOpen sprunget over (strat7_powell_capped.py mangler stadig), konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:32:19.336Z","note":"Scan 2026-08-31 (nat): XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler. Powell_KeyOpen sprunget over -- strat7_powell_capped.py mangler stadig paa disk.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:18:07.573Z","note":"Scan 2026-08-31: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler. Powell_KeyOpen sprunget over -- strat7_powell_capped.py mangler stadig paa disk (strat7_powell.py indeholder ved en fejl capped-variantens kode og importerer sig selv).","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T19:02:27.574Z","note":"Scan 2026-08-31 (sen): XAUUSD+XAGUSD M15 5000 candles. 0 nye signaler (CRT_TBS, Trend_OB, ORB). Powell_KeyOpen sprunget over -- strat7_powell_capped.py modul mangler stadig paa disk (samme gab som tidligere scans), saa ingen Powell-signaler kunne evalueres. Ingen ordrer eksekveret. Konto-status opdateret: balance\/equity $25,000, 0 aabne positioner.","symbols_checked":"XAUUSD, XAGUSD","signals_found":0},{"logged_at":"2026-08-31T18:49:29.146Z","note":"Scan XAUUSD+XAGUSD M15 5000 candles. 0 nye signaler (CRT_TBS\/Trend_OB\/ORB). Powell_KeyOpen sprunget over: strat7_powell_capped.py mangler paa disk (kun strat7_powell.py findes, og dets indhold er selv-importerende capped-wrapper -- base-modulet er tabt). live_scan.py patchet til at faile graceful i stedet for at crashe hele scannet.","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T18:31:58.626Z","note":"Scan 2026-08-31: XAUUSD+XAGUSD M15 5000 candles, 0 nye signaler (inkl. Powell), konto-status opdateret","symbols_checked":"XAUUSD,XAGUSD","signals_found":0},{"logged_at":"2026-08-31T18:26:24.631Z","note":"Scan 2026-08-31: XAUUSD+XAGUSD M15 5000 candles. 3 nye Powell_KeyOpen signaler fundet men IKKE eksekveret (Powell midlertidigt deaktiveret pga. lot-size problem). 0 signaler fra CRT_TBS\/Trend_OB\/ORB. Konto-status logget.","symbols_checked":"XAUUSD, XAGUSD","signals_found":3}] || [];
+const accountStatus = {"Rune Main": {"logged_at": "2026-09-01 17:53:52.920643+00:00", "balance": 25000.0, "equity": 25000.0, "margin": 0.0, "free_margin": 25000.0, "margin_level": 0.0, "open_positions_count": 0, "currency": "USD"}};
+const accountsConfig = {"leader": {"display_name": "Rune Main", "role": "leader", "mcp_server_name": "metatrader", "mt5_login": 5055310793, "mt5_server": "MetaQuotes-Demo", "balance": 25000}};
+const generatedAt = "2026-09-01T17:54:00.107577+00:00";
 
-function renderAccountPanel() {
-  const container = document.getElementById('acctPanel');
-  const accounts = Object.entries(accountStatus);
-  if (!accounts.length) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-      Ingen live konto-data endnu. Tilføjes automatisk næste gang scanneren
-      kalder get_account_info() og logger den via account_status.py.
-    </div>`;
-    return;
-  }
-  const now = new Date();
-  container.innerHTML = accounts.map(([acct, s]) => {
-    const logTime = new Date(s.logged_at);
-    const ageMin = Math.round((now - logTime) / 60000);
-    const staleCls = ageMin > 45 ? 'acct-stale' : '';
-    const pnlSinceStart = (s.equity - s.balance);
-    const pnlCls = pnlSinceStart >= 0 ? 'pnl-pos' : 'pnl-neg';
-    return `<div class="acct-box">
-      <div class="acct-name">${acct}</div>
-      <div class="big-label">Egenkapital (equity)</div>
-      <div class="big-num">$${Number(s.equity).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-      <div class="subrow"><span>Balance</span><span>$${Number(s.balance).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>
-      <div class="subrow"><span>Åbne positioner</span><span>${s.open_positions_count}</span></div>
-      <div class="subrow"><span>Fri margin</span><span>$${Number(s.free_margin).toLocaleString(undefined,{minimumFractionDigits:0})}</span></div>
-      <div class="subrow ${staleCls}"><span>Sidst opdateret</span><span>${ageMin < 1 ? 'lige nu' : ageMin + ' min. siden'}</span></div>
-    </div>`;
-  }).join('');
-}
-
-// FundingPips Zero thresholds -- adjust here if you switch products
-const ZERO_MAX_TRAILING_LOSS_PCT = 5.0;
-const ZERO_DAILY_LOSS_LIMIT_PCT = 3.0;
-const ZERO_PAYOUT_QUALIFYING_DAY_PCT = 0.25;
-const ZERO_PAYOUT_DAYS_NEEDED = 7;
-const ZERO_ROLLING_WINDOW_DAYS = 30;
-
-function gaugeClass(pctOfLimit) {
-  if (pctOfLimit >= 80) return 'danger';
-  if (pctOfLimit >= 50) return 'warn';
-  return 'ok';
-}
-
-function renderRiskPanel() {
-  const container = document.getElementById('riskPanel');
-  const closed = trades.filter(t => t.outcome && t.pnl_usd != null && t.entry_time);
-  if (!closed.length) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-      Ingen lukkede trades endnu -- drawdown- og udbetalingsstatus vises her,
-      så snart der er data at regne på.
-    </div>`;
-    return;
-  }
-
-  // account balance: prefer live account_status, else assume $25,000 starting balance
-  const acctEntry = Object.values(accountStatus)[0];
-  const startBalance = acctEntry ? Number(acctEntry.balance) - closed.reduce((s,t)=>s+Number(t.pnl_usd||0),0) : 25000;
-
-  // build daily PnL series
-  const byDay = {};
-  closed.forEach(t => {
-    const day = t.entry_time.substring(0, 10);
-    byDay[day] = (byDay[day] || 0) + Number(t.pnl_usd || 0);
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
   });
-  const days = Object.keys(byDay).sort();
+});
 
-  // equity curve + running peak -> current drawdown
-  let equity = startBalance;
-  let peak = startBalance;
-  days.forEach(d => { equity += byDay[d]; peak = Math.max(peak, equity); });
-  const currentEquity = acctEntry ? Number(acctEntry.equity) : equity;
-  peak = Math.max(peak, currentEquity);
-  const drawdownPct = peak > 0 ? Math.max(0, (peak - currentEquity) / peak * 100) : 0;
-  const ddPctOfLimit = Math.min(100, drawdownPct / ZERO_MAX_TRAILING_LOSS_PCT * 100);
-
-  // today's PnL vs daily loss limit
-  const todayStr = new Date().toISOString().substring(0, 10);
-  const todayPnl = byDay[todayStr] || 0;
-  const todayPnlPct = startBalance > 0 ? (todayPnl / startBalance * 100) : 0;
-  const dailyPctOfLimit = Math.min(100, Math.max(0, -todayPnlPct) / ZERO_DAILY_LOSS_LIMIT_PCT * 100);
-
-  // rolling 30-day qualifying days count
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - ZERO_ROLLING_WINDOW_DAYS);
-  let qualifyingDays = 0;
-  days.forEach(d => {
-    if (new Date(d) >= cutoff) {
-      const dayPct = startBalance > 0 ? (byDay[d] / startBalance * 100) : 0;
-      if (dayPct >= ZERO_PAYOUT_QUALIFYING_DAY_PCT) qualifyingDays++;
-    }
-  });
-  const payoutProgress = Math.min(100, qualifyingDays / ZERO_PAYOUT_DAYS_NEEDED * 100);
-
-  const ddCls = gaugeClass(ddPctOfLimit);
-  const dailyCls = gaugeClass(dailyPctOfLimit);
-
-  const dayDots = Array.from({length: ZERO_PAYOUT_DAYS_NEEDED}, (_, i) =>
-    `<div class="payout-dot ${i < qualifyingDays ? 'filled' : ''}"></div>`).join('');
-
-  container.innerHTML = `
-    <div class="risk-box">
-      <div class="risk-title">Drawdown fra peak</div>
-      <div class="risk-sub">Zero's grænse: ${ZERO_MAX_TRAILING_LOSS_PCT}% trailing loss</div>
-      <div class="gauge-track"><div class="gauge-fill ${ddCls}" style="width:${ddPctOfLimit}%"></div></div>
-      <div class="risk-value">${drawdownPct.toFixed(2)}%</div>
-      <div class="risk-limit">af ${ZERO_MAX_TRAILING_LOSS_PCT}% max — ${(ZERO_MAX_TRAILING_LOSS_PCT - drawdownPct).toFixed(2)}% margin tilbage</div>
-    </div>
-    <div class="risk-box">
-      <div class="risk-title">Dagens tab</div>
-      <div class="risk-sub">Zero's grænse: ${ZERO_DAILY_LOSS_LIMIT_PCT}% pr. dag</div>
-      <div class="gauge-track"><div class="gauge-fill ${dailyCls}" style="width:${dailyPctOfLimit}%"></div></div>
-      <div class="risk-value ${todayPnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${todayPnl >= 0 ? '+' : ''}$${todayPnl.toFixed(2)}</div>
-      <div class="risk-limit">${todayPnlPct.toFixed(2)}% i dag, af -${ZERO_DAILY_LOSS_LIMIT_PCT}% max</div>
-    </div>
-    <div class="risk-box">
-      <div class="risk-title">Udbetalings-fremdrift</div>
-      <div class="risk-sub">${ZERO_PAYOUT_DAYS_NEEDED} profitable dage (≥${ZERO_PAYOUT_QUALIFYING_DAY_PCT}%) i seneste ${ZERO_ROLLING_WINDOW_DAYS} dage</div>
-      <div class="gauge-track"><div class="gauge-fill ok" style="width:${payoutProgress}%"></div></div>
-      <div class="risk-value">${qualifyingDays} / ${ZERO_PAYOUT_DAYS_NEEDED}</div>
-      <div class="payout-days">${dayDots}</div>
-    </div>
-  `;
+function metalSpan(symbol) {
+  if (!symbol) return '-';
+  const cls = symbol.toUpperCase().includes('XAU') ? 'metal-xau' : symbol.toUpperCase().includes('XAG') ? 'metal-xag' : '';
+  return cls ? `<span class="${cls}">${symbol}</span>` : symbol;
 }
 
 function fmtLocalTime(isoString) {
@@ -399,12 +373,6 @@ function fmtLocalTime(isoString) {
     timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit',
   }).replace(',', '');
-}
-
-function metalSpan(symbol) {
-  if (!symbol) return '-';
-  const cls = symbol.toUpperCase().includes('XAU') ? 'metal-xau' : symbol.toUpperCase().includes('XAG') ? 'metal-xag' : '';
-  return cls ? `<span class="${cls}">${symbol}</span>` : symbol;
 }
 
 function fmtPnl(v) {
@@ -440,14 +408,10 @@ function renderStatus() {
   let text;
   if (diffMin < 2) text = 'Opdateret for få øjeblikke siden';
   else if (diffMin < 60) text = `Opdateret for ${diffMin} min. siden`;
-  else text = `Opdateret ${fmtLocalTime(generatedAt)} (dansk tid)`;
+  else text = `Opdateret ${fmtLocalTime(generatedAt)}`;
   el.textContent = text;
-
   const dot = document.getElementById('statusDot');
   if (diffMin > 45) { dot.style.background = 'var(--pending)'; dot.style.animation = 'none'; }
-
-  document.getElementById('totalSignals').textContent = `${trades.length} signal(er) i alt`;
-  document.getElementById('totalAccounts').textContent = `${Object.keys(summary).length} konto(er)`;
 }
 
 function renderHeroChart() {
@@ -458,11 +422,7 @@ function renderHeroChart() {
     return;
   }
   container.style.display = 'block';
-
   const points = acct.equity_curve;
-  const startingBalance = points[0] !== 0 ? (acct.total_pnl_usd - points[points.length-1] + points[0]) : 0;
-  const totalReturnPct = startingBalance ? (points[points.length-1] / (25000) * 100) : 0;
-
   const returnEl = document.getElementById('heroReturn');
   const cls = points[points.length-1] >= 0 ? 'pnl-pos' : 'pnl-neg';
   returnEl.innerHTML = `<span class="${cls}">${points[points.length-1] >= 0 ? '+' : ''}$${points[points.length-1].toFixed(2)}</span>`;
@@ -471,7 +431,6 @@ function renderHeroChart() {
   const min = Math.min(...points, 0), max = Math.max(...points, 0);
   const range = (max - min) || 1;
   const stepX = (w - padL - padR) / (points.length - 1);
-
   const coords = points.map((p, i) => {
     const x = padL + i * stepX;
     const y = h - padB - ((p - min) / range) * (h - padT - padB);
@@ -482,8 +441,7 @@ function renderHeroChart() {
   const areaPoints = `${padL},${zeroY} ` + linePoints + ` ${padL + (points.length-1)*stepX},${zeroY}`;
   const lineColor = points[points.length-1] >= 0 ? '#4ade80' : '#f2685c';
 
-  const svg = document.getElementById('heroChartSvg');
-  svg.innerHTML = `
+  document.getElementById('heroChartSvg').innerHTML = `
     <line x1="${padL}" y1="${zeroY}" x2="${w-padR}" y2="${zeroY}" stroke="#23282f" stroke-width="1" stroke-dasharray="3,3"/>
     <text class="axis-label" x="4" y="${zeroY+4}">$0</text>
     <text class="axis-label" x="4" y="${padT+8}">${max.toFixed(0)}</text>
@@ -493,17 +451,98 @@ function renderHeroChart() {
   `;
 }
 
+const ZERO_MAX_TRAILING_LOSS_PCT = 5.0;
+const ZERO_DAILY_LOSS_LIMIT_PCT = 3.0;
+const ZERO_PAYOUT_QUALIFYING_DAY_PCT = 0.25;
+const ZERO_PAYOUT_DAYS_NEEDED = 7;
+const ZERO_ROLLING_WINDOW_DAYS = 30;
+
+function gaugeClass(pctOfLimit) {
+  if (pctOfLimit >= 80) return 'danger';
+  if (pctOfLimit >= 50) return 'warn';
+  return 'ok';
+}
+
+function renderRiskPanel() {
+  const container = document.getElementById('riskPanel');
+  const closed = trades.filter(t => t.outcome && t.pnl_usd != null && t.entry_time);
+  if (!closed.length) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <strong>Ingen lukkede trades endnu.</strong><br>Drawdown- og udbetalingsstatus vises her, så snart en trade har lukket.
+    </div>`;
+    return;
+  }
+  const acctEntry = Object.values(accountStatus)[0];
+  const startBalance = acctEntry ? Number(acctEntry.balance) - closed.reduce((s,t)=>s+Number(t.pnl_usd||0),0) : 25000;
+  const byDay = {};
+  closed.forEach(t => {
+    const day = t.entry_time.substring(0, 10);
+    byDay[day] = (byDay[day] || 0) + Number(t.pnl_usd || 0);
+  });
+  const days = Object.keys(byDay).sort();
+  let equity = startBalance, peak = startBalance;
+  days.forEach(d => { equity += byDay[d]; peak = Math.max(peak, equity); });
+  const currentEquity = acctEntry ? Number(acctEntry.equity) : equity;
+  peak = Math.max(peak, currentEquity);
+  const drawdownPct = peak > 0 ? Math.max(0, (peak - currentEquity) / peak * 100) : 0;
+  const ddPctOfLimit = Math.min(100, drawdownPct / ZERO_MAX_TRAILING_LOSS_PCT * 100);
+
+  const todayStr = new Date().toISOString().substring(0, 10);
+  const todayPnl = byDay[todayStr] || 0;
+  const todayPnlPct = startBalance > 0 ? (todayPnl / startBalance * 100) : 0;
+  const dailyPctOfLimit = Math.min(100, Math.max(0, -todayPnlPct) / ZERO_DAILY_LOSS_LIMIT_PCT * 100);
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ZERO_ROLLING_WINDOW_DAYS);
+  let qualifyingDays = 0;
+  days.forEach(d => {
+    if (new Date(d) >= cutoff) {
+      const dayPct = startBalance > 0 ? (byDay[d] / startBalance * 100) : 0;
+      if (dayPct >= ZERO_PAYOUT_QUALIFYING_DAY_PCT) qualifyingDays++;
+    }
+  });
+  const payoutProgress = Math.min(100, qualifyingDays / ZERO_PAYOUT_DAYS_NEEDED * 100);
+  const ddCls = gaugeClass(ddPctOfLimit);
+  const dailyCls = gaugeClass(dailyPctOfLimit);
+  const dayDots = Array.from({length: ZERO_PAYOUT_DAYS_NEEDED}, (_, i) =>
+    `<div class="payout-dot ${i < qualifyingDays ? 'filled' : ''}"></div>`).join('');
+
+  container.innerHTML = `
+    <div class="risk-box">
+      <div class="risk-title">Drawdown fra peak</div>
+      <div class="risk-sub">Zero's grænse: ${ZERO_MAX_TRAILING_LOSS_PCT}% trailing loss</div>
+      <div class="gauge-track"><div class="gauge-fill ${ddCls}" style="width:${ddPctOfLimit}%"></div></div>
+      <div class="risk-value">${drawdownPct.toFixed(2)}%</div>
+      <div class="risk-limit">af ${ZERO_MAX_TRAILING_LOSS_PCT}% max — ${(ZERO_MAX_TRAILING_LOSS_PCT - drawdownPct).toFixed(2)}% margin tilbage</div>
+    </div>
+    <div class="risk-box">
+      <div class="risk-title">Dagens tab</div>
+      <div class="risk-sub">Zero's grænse: ${ZERO_DAILY_LOSS_LIMIT_PCT}% pr. dag</div>
+      <div class="gauge-track"><div class="gauge-fill ${dailyCls}" style="width:${dailyPctOfLimit}%"></div></div>
+      <div class="risk-value ${todayPnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${todayPnl >= 0 ? '+' : ''}$${todayPnl.toFixed(2)}</div>
+      <div class="risk-limit">${todayPnlPct.toFixed(2)}% i dag, af -${ZERO_DAILY_LOSS_LIMIT_PCT}% max</div>
+    </div>
+    <div class="risk-box">
+      <div class="risk-title">Udbetalings-fremdrift</div>
+      <div class="risk-sub">${ZERO_PAYOUT_DAYS_NEEDED} profitable dage (≥${ZERO_PAYOUT_QUALIFYING_DAY_PCT}%) i seneste ${ZERO_ROLLING_WINDOW_DAYS} dage</div>
+      <div class="gauge-track"><div class="gauge-fill ok" style="width:${payoutProgress}%"></div></div>
+      <div class="risk-value">${qualifyingDays} / ${ZERO_PAYOUT_DAYS_NEEDED}</div>
+      <div class="payout-days">${dayDots}</div>
+    </div>
+  `;
+}
+
 function renderStrategyTable() {
   const empty = document.getElementById('strategyEmpty');
   const table = document.getElementById('strategyTable');
   if (!strategyBreakdown.length) {
     empty.style.display = 'block';
+    empty.innerHTML = '<strong>Ingen lukkede trades endnu.</strong><br>Performance per strategi vises her, så snart en trade har lukket.';
     table.style.display = 'none';
     return;
   }
   empty.style.display = 'none';
   table.style.display = 'table';
-
   const maxAbsPnl = Math.max(...strategyBreakdown.map(s => Math.abs(s.total_pnl)), 1);
   document.getElementById('strategyBody').innerHTML = strategyBreakdown.map(s => {
     const pnlCls = s.total_pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
@@ -521,28 +560,41 @@ function renderStrategyTable() {
   }).join('');
 }
 
-function renderCards() {
-  const container = document.getElementById('cards');
-  if (!Object.keys(summary).length) {
-    container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Ingen konti aktive endnu.</div>';
+function renderAccountsTab() {
+  const sub = document.getElementById('accountsSub');
+  const list = document.getElementById('accountsDetailList');
+  const entries = Object.entries(accountStatus);
+
+  const configuredCount = Object.keys(accountsConfig).length;
+  const followerCount = Object.values(accountsConfig).filter(a => a.role === 'follower').length;
+  sub.textContent = followerCount > 0
+    ? `${configuredCount} konti konfigureret (1 leder, ${followerCount} følger${followerCount > 1 ? 'e' : ''})`
+    : `1 leder-konto aktiv — ingen følger-konti tilføjet endnu`;
+
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state"><strong>Ingen live kontodata endnu.</strong><br>Tilføjes automatisk næste gang scanneren henter kontostatus fra MT5.</div>`;
     return;
   }
-  container.innerHTML = '';
-  for (const [acct, s] of Object.entries(summary)) {
-    const pnlClass = s.total_pnl_usd >= 0 ? 'pnl-pos' : 'pnl-neg';
-    container.innerHTML += `
-      <div class="card">
-        <h2>${acct}</h2>
-        <div class="role">${s.role}</div>
-        <div class="stat-row"><span class="label">Signaler</span><span class="val">${s.total_signals}</span></div>
-        <div class="stat-row"><span class="label">Lukkede trades</span><span class="val">${s.closed_trades}</span></div>
-        <div class="stat-row"><span class="label">Åbne/afventer</span><span class="val">${s.open_or_pending}</span></div>
-        <div class="stat-row"><span class="label">Vindere / tabere</span><span class="val">${s.wins} / ${s.losses}</span></div>
-        <div class="stat-row"><span class="label">Winrate</span><span class="val">${s.winrate !== null ? s.winrate + '%' : '-'}</span></div>
-        <div class="stat-row"><span class="label">Total PnL</span><span class="val ${pnlClass}">$${s.total_pnl_usd.toFixed(2)}</span></div>
-        <div class="sparkline">${sparklineSvg(s.equity_curve)}</div>
-      </div>`;
-  }
+  const now = new Date();
+  list.innerHTML = entries.map(([acct, s]) => {
+    const logTime = new Date(s.logged_at);
+    const ageMin = Math.round((now - logTime) / 60000);
+    const cfg = Object.values(accountsConfig).find(a => a.display_name === acct);
+    const role = cfg ? cfg.role : 'leader';
+    return `<div class="account-detail-card">
+      <div class="adc-top">
+        <div class="adc-name">${acct}</div>
+        <span class="adc-role-badge ${role}">${role === 'leader' ? 'Leder' : 'Følger'}</span>
+      </div>
+      <div class="adc-grid">
+        <div class="adc-stat"><div class="adc-label">Egenkapital</div><div class="adc-value">$${Number(s.equity).toLocaleString(undefined,{minimumFractionDigits:2})}</div></div>
+        <div class="adc-stat"><div class="adc-label">Balance</div><div class="adc-value">$${Number(s.balance).toLocaleString(undefined,{minimumFractionDigits:2})}</div></div>
+        <div class="adc-stat"><div class="adc-label">Åbne positioner</div><div class="adc-value">${s.open_positions_count}</div></div>
+        <div class="adc-stat"><div class="adc-label">Fri margin</div><div class="adc-value">$${Number(s.free_margin).toLocaleString(undefined,{minimumFractionDigits:0})}</div></div>
+        <div class="adc-stat"><div class="adc-label">Opdateret</div><div class="adc-value">${ageMin < 1 ? 'lige nu' : ageMin + ' min. siden'}</div></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function populateFilters() {
@@ -577,12 +629,13 @@ function outcomeBadge(o) {
 function renderTable() {
   const list = filteredTrades();
   const hasTrades = trades.length > 0;
-  document.getElementById('tradesEmpty').style.display = hasTrades ? 'none' : 'block';
+  const emptyEl = document.getElementById('tradesEmpty');
+  emptyEl.style.display = hasTrades ? 'none' : 'block';
+  emptyEl.innerHTML = '<strong>Ingen trades endnu.</strong><br>Systemet scanner hvert 15. minut og venter på et signal der matcher en af de fire strategiers regler.';
   document.querySelector('.desktop-table').style.display = hasTrades ? 'block' : 'none';
   document.getElementById('tradesCards').style.display = hasTrades ? '' : 'none';
 
-  const body = document.getElementById('tradesBody');
-  body.innerHTML = list.map(t => {
+  document.getElementById('tradesBody').innerHTML = list.map(t => {
     const dirClass = t.direction === 'long' ? 'dir-long' : 'dir-short';
     return `<tr>
       <td>${fmtLocalTime(t.entry_time)}</td>
@@ -601,14 +654,10 @@ function renderTable() {
     </tr>`;
   }).join('');
 
-  const cards = document.getElementById('tradesCards');
-  cards.innerHTML = list.map(t => {
+  document.getElementById('tradesCards').innerHTML = list.map(t => {
     const dirClass = t.direction === 'long' ? 'dir-long' : 'dir-short';
     return `<div class="trade-card">
-      <div class="row1">
-        <span class="symbol">${metalSpan(t.symbol)}</span>
-        ${outcomeBadge(t.outcome)}
-      </div>
+      <div class="row1"><span class="symbol">${metalSpan(t.symbol)}</span>${outcomeBadge(t.outcome)}</div>
       <div class="grid">
         <div>Retning<span class="${dirClass}">${t.direction}</span></div>
         <div>Entry<span>${t.entry_price != null ? t.entry_price.toFixed(2) : '-'}</span></div>
@@ -624,11 +673,13 @@ function renderTable() {
 
 function renderActivity() {
   const container = document.getElementById('activityLog');
-  document.getElementById('activityEmpty').style.display = activity.length ? 'none' : 'block';
+  const emptyEl = document.getElementById('activityEmpty');
+  emptyEl.style.display = activity.length ? 'none' : 'block';
+  emptyEl.innerHTML = '<strong>Ingen aktivitet logget endnu.</strong><br>Ved næste scan noterer Claude her hvad der blev tjekket og fundet.';
   if (!activity.length) { container.innerHTML = ''; return; }
   container.innerHTML = activity.map(a => `
     <div class="activity-item">
-      <div class="activity-time">${fmtLocalTime(a.logged_at)} (dansk tid)</div>
+      <div class="activity-time">${fmtLocalTime(a.logged_at)}</div>
       <div class="activity-note">${a.note || ''}</div>
       <div class="activity-meta">${a.symbols_checked || ''}${a.signals_found ? ' · ' + a.signals_found + ' signal(er) fundet' : ''}</div>
     </div>`).join('');
@@ -639,11 +690,10 @@ document.getElementById('stratFilter').addEventListener('change', renderTable);
 document.getElementById('outcomeFilter').addEventListener('change', renderTable);
 
 renderStatus();
-renderAccountPanel();
 renderHeroChart();
 renderRiskPanel();
-renderCards();
 renderStrategyTable();
+renderAccountsTab();
 populateFilters();
 renderTable();
 renderActivity();
