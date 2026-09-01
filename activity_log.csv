@@ -63,3 +63,4 @@ logged_at,note,symbols_checked,signals_found
 2026-09-01 02:17:50.093672+00:00,"Scan 2026-09-01 (nat 29): XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (CRT_TBS, Trend_OB, ORB, Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","XAUUSD, XAGUSD",0
 2026-09-01 02:31:27.038604+00:00,"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret.","XAUUSD,XAGUSD",0
 2026-09-01 02:46:19.803518+00:00,"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler, konto-status opdateret","XAUUSD,XAGUSD",0
+2026-09-01 03:01:24.564859+00:00,"Scan 2026-09-01: XAUUSD+XAGUSD M15 5000 candles, alle 4 strategier aktive (Powell_KeyOpen via strat7_powell_capped), 0 nye signaler.","XAUUSD, XAGUSD",0
