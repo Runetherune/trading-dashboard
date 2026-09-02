@@ -25,7 +25,7 @@ TO ADD A FOLLOWER ACCOUNT:
 ACCOUNTS = {
     "rune_copy": {
         "display_name": "Rune Copy#1",
-        "role": "follower",
+        "role": "leader",
         "mcp_server_name": "metatrader_2",
         "mt5_login": 5055338800,
         "mt5_server": "MetaQuotes-Demo",
@@ -34,7 +34,7 @@ ACCOUNTS = {
 
     "leader": {
         "display_name": "Rune Main",  # <-- change this to whatever you want shown
-        "role": "leader",
+        "role": "follower",
         "mcp_server_name": "metatrader",
         "mt5_login": 5055310793,
         "mt5_server": "MetaQuotes-Demo",
