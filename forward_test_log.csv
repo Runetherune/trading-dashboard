@@ -18,3 +18,4 @@ logged_at,symbol,strategy,direction,entry_time,entry_price,sl,tp,lot_size,risk_p
 2026-09-01 08:45:53.532800,XAUUSD,Powell_KeyOpen,short,2026-09-01 05:30:00+00:00,4431.93,4449.9321,4395.925800000001,0.01,0.072,FEJLET - AutoTrading disabled by server (retcode 10026),,,
 2026-09-01 11:15:10.955832,XAUUSD,CRT_TBS,long,2026-09-01 01:00:00+00:00,4436.57,4427.80776,4463.99,0.03,0.105,FEJLET - AutoTrading disabled by client (retcode 10027),,,
 2026-09-02 11:46:35.074922,XAGUSD,Powell_KeyOpen,short,2026-09-02 09:15:00+00:00,63.954,64.33240799999999,63.19718400000003,0.01,0.076,LUKKET,58272161854.0,loss,-6.45
+2026-09-02 18:47:02.632447,XAGUSD,Powell_KeyOpen,short,2026-09-02 15:30:00+00:00,64.314,64.640022,63.661955999999975,0.01,0.065,"ORDRE PLACERET (pending SELL_STOP, demo, leder) - foelger FEJLET AutoTrading disabled by client retcode 10027",58281230576.0,,
