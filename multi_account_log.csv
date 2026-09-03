@@ -1,3 +1,5 @@
 logged_at,account,role,symbol,strategy,direction,entry_time,entry_price,sl,tp,lot_size,risk_pct_used,status,mt5_ticket,outcome,pnl_usd
 2026-09-02 18:51:18.428697,Rune Main,leader,XAGUSD,Powell_KeyOpen,short,2026-09-02 15:30:00+00:00,64.314,64.640022,63.661956,0.01,0.065,"ORDRE PLACERET (pending SELL_STOP, demo)",58281230576.0,,
 2026-09-02 18:51:18.428827,Rune Copy#1,follower,XAGUSD,Powell_KeyOpen,short,2026-09-02 15:30:00+00:00,64.314,64.640022,63.661956,0.01,0.065,FEJLET - AutoTrading disabled by client (retcode 10027),,,
+2026-09-03 17:18:49.959429,Rune Main,leader,XAUUSD,ORB,long,2026-09-03 18:00:00+00:00,4503.76,4439.09,4633.1,0.01,0.259,"ORDRE PLACERET (pending BUY_LIMIT, demo)",58297762118.0,,
+2026-09-03 17:18:49.959429,Rune Copy#1,follower,XAUUSD,ORB,long,2026-09-03 18:00:00+00:00,4503.76,4439.09,4633.1,0.01,0.257,"ORDRE PLACERET (pending BUY_LIMIT, demo)",58297763767.0,,
