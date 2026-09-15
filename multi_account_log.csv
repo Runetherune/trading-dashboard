@@ -49,3 +49,5 @@ logged_at,account,role,symbol,strategy,direction,entry_time,entry_price,sl,tp,lo
 2026-09-14 19:43:23.492835,Rune Copy#1,follower,XAGUSD,Powell_KeyOpen,short,2026-09-14 16:45:00+00:00,62.832,63.215178,62.065644,0.01,0.077,"ORDRE PLACERET (pending SELL_STOP, demo)",58449029404.0,,
 2026-09-15 08:48:30.232404,Rune Main,leader,XAGUSD,Powell_KeyOpen,short,2026-09-15 06:45:00+00:00,63.319,63.695136,62.566728,0.01,0.075,FEJLET - AutoTrading disabled by client (retcode 10027),,,
 2026-09-15 08:48:30.232404,Rune Copy#1,follower,XAGUSD,Powell_KeyOpen,short,2026-09-15 06:45:00+00:00,63.319,63.695136,62.566728,0.01,0.075,"ORDRE PLACERET (pending SELL_LIMIT, demo)",58458050338.0,,
+2026-09-15 09:46:38.199515,Rune Main,leader,XAUUSD,Powell_KeyOpen,short,2026-09-15 06:45:00+00:00,4303.43,4322.09694,4266.09612,0.01,0.075,FEJLET - AutoTrading disabled by client (retcode 10027),,,
+2026-09-15 09:46:38.199515,Rune Copy#1,follower,XAUUSD,Powell_KeyOpen,short,2026-09-15 06:45:00+00:00,4303.43,4322.09694,4266.09612,0.01,0.075,"ORDRE PLACERET (pending SELL_LIMIT, demo)",58459093980,,
